@@ -48,18 +48,11 @@ class DockerSandboxSpecService(SandboxSpecService):
             working_dir=self.working_dir
         )
 
-    async def search_sandbox_specs(self, image_name__eq: str | None = None, page_id: str | None = None, limit: int = 100) -> SandboxSpecInfoPage:
+    async def search_sandbox_specs(self, page_id: str | None = None, limit: int = 100) -> SandboxSpecInfoPage:
         """Search for runtime images"""
         try:
-            # If image_name__eq is provided, search for that specific image
-            # Otherwise, search for all images with the configured repository
-            if image_name__eq:
-                search_name = image_name__eq
-            else:
-                search_name = self.repository
-            
             # Get all images that match the repository
-            images = self.client.images.list(name=search_name)
+            images = self.client.images.list(name=self.repository)
             
             # Convert Docker images to SandboxSpecInfo
             sandbox_specs = []

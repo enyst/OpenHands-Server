@@ -6,6 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from openhands_server.local_conversation.agent_info import AgentInfo
 from openhands_server.local_conversation.local_conversation_models import LocalConversationInfo
 
 
@@ -14,6 +15,6 @@ class SandboxedConversationInfo(LocalConversationInfo):
     sandbox_id: UUID | None
 
 
-class SandboxedConversationInfoPage(BaseModel):
+class SandboxedConversationPage(BaseModel):
     items: list[SandboxedConversationInfo]
     next_page_id: str | None = None
