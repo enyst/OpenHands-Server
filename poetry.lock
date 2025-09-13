@@ -2111,8 +2111,8 @@ tenacity = ">=9.1.2"
 [package.source]
 type = "git"
 url = "https://github.com/All-Hands-AI/agent-sdk.git"
-reference = "b3ddfb3468c22a37fbb87d96323914d23bacb4ed"
-resolved_reference = "b3ddfb3468c22a37fbb87d96323914d23bacb4ed"
+reference = "b63f92733928c4994d0edc30abd6373d6ef03ef0"
+resolved_reference = "b63f92733928c4994d0edc30abd6373d6ef03ef0"
 subdirectory = "openhands/sdk"
 
 [[package]]
@@ -2136,8 +2136,8 @@ pydantic = ">=2.11.7"
 [package.source]
 type = "git"
 url = "https://github.com/All-Hands-AI/agent-sdk.git"
-reference = "b3ddfb3468c22a37fbb87d96323914d23bacb4ed"
-resolved_reference = "b3ddfb3468c22a37fbb87d96323914d23bacb4ed"
+reference = "b63f92733928c4994d0edc30abd6373d6ef03ef0"
+resolved_reference = "b63f92733928c4994d0edc30abd6373d6ef03ef0"
 subdirectory = "openhands/tools"
 
 [[package]]
@@ -3753,4 +3753,4 @@ dev = ["black", "flake8", "httpx", "isort", "mypy", "pre-commit", "pytest", "pyt
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "03ad3eb6a8e479bb8fb70f3995c2a405370d0a87b69b8add06abd03fda9acf87"
+content-hash = "f44fdc9aa9c8152ade177d3fdee600a6cb1c355a6594843d330f860734403e45"

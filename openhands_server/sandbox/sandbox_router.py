@@ -1,7 +1,8 @@
 """Runtime Containers router for OpenHands Server."""
 
+from typing import Annotated
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from openhands_server.sandbox.sandbox_models import SandboxInfo, SandboxPage
 from openhands_server.sandbox.sandbox_service import SandboxService, get_default_sandbox_service
@@ -17,7 +18,11 @@ router.lifespan(sandbox_service)
 # Read methods
 
 @router.get("/search")
-async def search_sandboxes(page_id: str | None = None, limit: int = 100, user_id: UUID = Depends(get_user_id)) -> SandboxPage:
+async def search_sandboxes(
+    page_id: Annotated[str | None, Query(title="Optional next_page_id from the previously returned page")] = None,
+    limit: Annotated[int, Query(title="The max number of results in the page", gt=0, lte=100, default=100)] = 100,
+    user_id: UUID = Depends(get_user_id)
+) -> SandboxPage:
     """Search / list sandboxes owned by the current user."""
     assert limit > 0
     assert limit <= 100

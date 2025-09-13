@@ -10,8 +10,8 @@ import shutil
 from uuid import UUID, uuid4
 
 from openhands_server.local_conversation.local_conversation import LocalConversation
-from openhands_server.local_conversation.service import LocalConversationService
-from openhands_server.local_conversation.model import LocalConversationInfo, LocalConversationPage, StartConversationRequest, StoredLocalConversation
+from openhands_server.local_conversation.local_conversation_models import LocalConversationInfo, LocalConversationPage, StartLocalConversationRequest, StoredLocalConversation
+from openhands_server.local_conversation.local_conversation_service import LocalConversationService
 
 
 logger = logging.getLogger(__name__)
@@ -25,13 +25,13 @@ class DefaultLocalConversationService(LocalConversationService):
     workspace_path: Path = field(default=Path("/workspace"))
     _running_conversations: dict[UUID, LocalConversation] = field(default_factory=dict)
 
-    async def get_local_conversation(self, conversation_id: UUID) -> LocalConversationInfo:
+    async def get_local_conversation(self, id: UUID) -> LocalConversationInfo:
         conversation = self._running_conversations.get(id)
         if conversation is not None:
             status = await conversation.get_status()
             return LocalConversationInfo(**conversation.stored.model_dump(), status=status)
         
-        meta_file = self.file_store_path / conversation_id.hex / "meta.json"
+        meta_file = self.file_store_path / id.hex / "meta.json"
         json_str = meta_file.read_text()
         # This works because the only field defined is status which defaults to stopped
         conversation = LocalConversationInfo.model_validate_json(json_str)
@@ -54,11 +54,11 @@ class DefaultLocalConversationService(LocalConversationService):
                 logger.exception('error_reading_conversation:{conversation_dir}', stack_info=True)
         return LocalConversationPage(items=items)
 
-    async def batch_get_local_conversations(self, conversation_ids: list[UUID]) -> list[LocalConversationInfo | None]:
+    async def batch_get_local_conversations(self, ids: list[UUID]) -> list[LocalConversationInfo | None]:
         conversations = []
-        for conversation_id in conversation_ids:
+        for id in ids:
             try:
-                conversation = await self.get_local_conversation(conversation_id)
+                conversation = await self.get_local_conversation(id)
                 conversations.append(conversation)
             except Exception:
                 conversations.append(None)
@@ -66,26 +66,31 @@ class DefaultLocalConversationService(LocalConversationService):
 
     # Write Methods
 
-    async def start_local_conversation(self, request: StartConversationRequest) -> UUID:
+    async def start_local_conversation(self, request: StartLocalConversationRequest) -> LocalConversationInfo:
         """ Start a local conversation and return its id. """
-        conversation_id = uuid4(),
-        stored = StoredLocalConversation(id=conversation_id, **request.model_dump())
+        id = uuid4(),
+        stored = StoredLocalConversation(id=id, **request.model_dump())
         conversation = LocalConversation(
             stored=stored,
-            file_store_path=self.file_store_path / conversation_id.hex / "conversation",
-            working_dir=self.workspace_path / conversation_id.hex,
+            file_store_path=self.file_store_path / id.hex / "conversation",
+            working_dir=self.workspace_path / id.hex,
         )
-        conversation.subscribe(_EventListener(self, conversation_id))
+        conversation.subscribe(_EventListener(self, id))
         self._running_conversations[id] = conversation
-        return id
+        await conversation.start()
+        return self.get_local_conversation(id)
 
     async def pause_local_conversation(self, conversation_id: UUID) -> bool:
         conversation = self._running_conversations.get(conversation_id)
-        await conversation.pause()
+        if conversation:
+            await conversation.pause()
+        return bool(conversation)
 
     async def resume_local_conversation(self, conversation_id: UUID) -> bool:
         conversation = self._running_conversations.get(conversation_id)
-        await conversation.start()
+        if conversation:
+            await conversation.start()
+        return bool(conversation)
 
     async def delete_local_conversation(self, conversation_id: UUID) -> bool:
         conversation = self._running_conversations.pop(conversation_id)

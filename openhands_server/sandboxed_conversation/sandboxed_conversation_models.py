@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from openhands_server.local_conversation.model import LocalConversationInfo
+from openhands_server.local_conversation.local_conversation_models import LocalConversationInfo
 
 
 class SandboxedConversationInfo(LocalConversationInfo):

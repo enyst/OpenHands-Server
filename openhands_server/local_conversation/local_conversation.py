@@ -9,8 +9,7 @@ from uuid import UUID
 from openhands.sdk import Conversation, LocalFileStore, Message
 from openhands.sdk.utils.async_utils import AsyncCallbackWrapper, AsyncConversationCallback
 
-from openhands_server.local_conversation.agent_info import AgentInfo
-from openhands_server.local_conversation.model import ConversationStatus, StoredLocalConversation
+from openhands_server.local_conversation.local_conversation_models import ConversationStatus, StoredLocalConversation
 from openhands_server.utils.pub_sub import PubSub
 
 
@@ -30,7 +29,7 @@ class LocalConversation:
     async def save_meta(self):
         self.stored.updated_at = datetime.now(UTC)
         meta_file = self.file_store_path / "meta.json"
-        meta_file.write_text(self.self.stored.model_dump_json())
+        meta_file.write_text(self.stored.model_dump_json())
 
     async def start(self):
         async with self._lock:

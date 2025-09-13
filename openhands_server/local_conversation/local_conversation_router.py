@@ -1,16 +1,17 @@
 """Local Conversation router for OpenHands Server."""
 
+from typing import Annotated
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from openhands import get_impl, get_user_id
 
-from openhands_server.local_conversation.service import LocalConversationService
-from openhands_server.local_conversation.model import LocalConversationInfo, LocalConversationPage
+from openhands_server.local_conversation.local_conversation_models import LocalConversationInfo, LocalConversationPage, StartLocalConversationRequest
+from openhands_server.local_conversation.local_conversation_service import get_default_local_conversation_service
 from openhands_server.utils.success import Success
 
 router = APIRouter(prefix="/local-conversations")
-local_conversation_service: LocalConversationService = get_impl(LocalConversationService)()
+local_conversation_service = get_default_local_conversation_service()
 router.lifespan(local_conversation_service)
 
 # LocalConversations are not available in the outer nesting container. They do not currently have permissions
@@ -19,15 +20,22 @@ router.lifespan(local_conversation_service)
 # Read methods
 
 @router.get("/search")
-async def search_local_conversations(page_id: str | None = None, limit: int = 100) -> LocalConversationPage:
+async def search_local_conversations(
+    page_id: Annotated[str | None, Query(title="Optional next_page_id from the previously returned page")] = None,
+    limit: Annotated[int, Query(title="The max number of results in the page", gt=0, lte=100, default=100)] = 100,
+) -> LocalConversationPage:
+    """ Search / List local conversations """
     assert limit > 0
     assert limit <= 100
     return await local_conversation_service.search_local_conversations(page_id, limit)
 
 
-@router.get("/{id}")
+@router.get("/{id}", responses={
+    404: {"description": "Item not found"}
+})
 async def get_local_conversation(id: UUID) -> LocalConversationInfo:
-    local_conversation = await local_conversation_service.get_local_conversation(conversation_id)
+    """ Get a local conversation given an id """
+    local_conversation = await local_conversation_service.get_local_conversation(id)
     if local_conversation is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
     return local_conversation
@@ -35,6 +43,7 @@ async def get_local_conversation(id: UUID) -> LocalConversationInfo:
 
 @router.get("/")
 async def batch_get_local_conversations(ids: list[UUID]) -> list[LocalConversationInfo | None]:
+    """Get a batch of local conversations given their ids, returning null for any missing spec."""
     assert len(ids) < 100
     local_conversations = await local_conversation_service.batch_get_local_conversations(ids)
     return local_conversations
@@ -43,19 +52,24 @@ async def batch_get_local_conversations(ids: list[UUID]) -> list[LocalConversati
 # Write Methods
 
 @router.post("/")
-async def start_local_conversation() -> UUID:
-    id = await local_conversation_service.start_local_conversation()
-    return id
+async def start_local_conversation(request: StartLocalConversationRequest) -> LocalConversationInfo:
+    """ Start a local conversation"""
+    info = await local_conversation_service.start_local_conversation(request)
+    return info
 
 
-@router.post("/{id}/pause")
+@router.post("/{id}/pause", responses={
+    404: {"description": "Item not found"}
+})
 async def pause_local_conversation(id: UUID) -> Success:
     paused = await local_conversation_service.pause_local_conversation(id)
     if not paused:
         raise HTTPException(status.HTTP_400_BAD_REQUEST) 
     return Success()
 
-@router.post("/{id}/resume")
+@router.post("/{id}/resume", responses={
+    404: {"description": "Item not found"}
+})
 async def resume_local_conversation(id: UUID) -> Success:
     paused = await local_conversation_service.resume_local_conversation(id)
     if not paused:
@@ -63,7 +77,9 @@ async def resume_local_conversation(id: UUID) -> Success:
     return Success()
 
 
-@router.delete("/{id}")
+@router.delete("/{id}", responses={
+    404: {"description": "Item not found"}
+})
 async def delete_local_conversation(id: UUID) -> Success:
     deleted = await local_conversation_service.delete_local_conversation(id)
     if not deleted:
