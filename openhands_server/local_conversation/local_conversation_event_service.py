@@ -59,7 +59,9 @@ class LocalConversationEventService(EventService):
                         return EventPage(items=items, next_page_id=event.id)
                     limit -= 1
                 
-                items.append(event)
+                    items.append(event)
+                    
+        return EventPage(items=items)
 
     async def send_message(self, message: Message):
         async with self._lock:
@@ -122,4 +124,5 @@ class LocalConversationEventService(EventService):
         await self.start()
     
     async def __aexit__(self, exc_type, exc_value, traceback):
+        self.save_meta()
         await self.close()

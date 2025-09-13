@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from tkinter import EventType
 from uuid import UUID
 
+from openhands_server.event.event_service import EventService
 from openhands_server.local_conversation.local_conversation_models import LocalConversationInfo, LocalConversationPage, StartLocalConversationRequest
 from openhands_server.utils.import_utils import get_impl
 
@@ -55,7 +56,7 @@ class LocalConversationService(ABC):
     # Event methods...
 
     @abstractmethod
-    async def get_event_service(self, id: UUID) -> EventType | None:
+    async def get_event_service(self, id: UUID) -> EventService | None:
         """ Get an event from a conversation. """
 
     # Lifecycle methods
