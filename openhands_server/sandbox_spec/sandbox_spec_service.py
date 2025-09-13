@@ -44,10 +44,10 @@ class SandboxSpecService(ABC):
         """ Get an instance of runtime image service """
 
 
-_sandbox_spec_service = None
+_sandbox_spec_service: SandboxSpecService = None
 
 
-def get_default_sandbox_spec_service():
+def get_default_sandbox_spec_service() -> SandboxSpecService:
     global _sandbox_spec_service
     if _sandbox_spec_service:
         return _sandbox_spec_service

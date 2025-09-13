@@ -1,16 +1,15 @@
 
-import asyncio
 import secrets
 import socket
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional
 from uuid import UUID, uuid4
 
 import docker
 from docker.errors import APIError, NotFound
 from pydantic import SecretStr
 
+from openhands_server.sandbox.sandbox_errors import SandboxError
 from openhands_server.sandbox.sandbox_models import (
     SandboxInfo,
     SandboxPage,
@@ -195,16 +194,6 @@ class DockerSandboxService(SandboxService):
             return self._container_to_runtime_info(container)
         except (NotFound, APIError):
             return None
-
-    async def batch_get_sandboxes(
-        self, ids: list[UUID]
-    ) -> list[SandboxInfo | None]:
-        """Get a batch of sandbox info"""
-        results = []
-        for container_id in ids:
-            result = await self.get_sandboxes(container_id)
-            results.append(result)
-        return results
 
     async def start_sandbox(self, user_id: UUID, sandbox_spec_id: str) -> UUID:
         """Start a new sandbox"""

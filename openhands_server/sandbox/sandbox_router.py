@@ -55,14 +55,18 @@ async def start_sandbox(user_id: UUID = Depends(get_user_id)) -> UUID:
     return id
 
 
-@router.post("/{id}/pause")
+@router.post("/{id}/pause", responses={
+    404: {"description": "Item not found"}
+})
 async def pause_sandbox(id: UUID, user_id: UUID = Depends(get_user_id)) -> Success:
     exists = await sandbox_service.pause_sandbox(user_id, id)
     if not exists:
         raise HTTPException(status.HTTP_404_NOT_FOUND) 
     return Success()
 
-@router.post("/{id}/resume")
+@router.post("/{id}/resume", responses={
+    404: {"description": "Item not found"}
+})
 async def resume_sandbox(id: UUID, user_id: UUID = Depends(get_user_id)) -> Success:
     exists = await sandbox_service.resume_sandbox(user_id, id)
     if not exists:
@@ -70,7 +74,9 @@ async def resume_sandbox(id: UUID, user_id: UUID = Depends(get_user_id)) -> Succ
     return Success()
 
 
-@router.delete("/{id}")
+@router.delete("/{id}", responses={
+    404: {"description": "Item not found"}
+})
 async def delete_sandbox(id: UUID, user_id: UUID = Depends(get_user_id)) -> Success:
     exists = await sandbox_service.delete_sandbox(user_id, id)
     if not exists:
