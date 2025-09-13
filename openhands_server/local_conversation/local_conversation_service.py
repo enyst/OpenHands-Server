@@ -57,7 +57,7 @@ class LocalConversationService(ABC):
 
     @abstractmethod
     async def get_event_service(self, id: UUID) -> EventService | None:
-        """ Get an event from a conversation. """
+        """ Get an event service for a conversation. """
 
     # Lifecycle methods
 

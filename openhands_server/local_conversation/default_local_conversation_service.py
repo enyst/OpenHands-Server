@@ -10,10 +10,10 @@ from pathlib import Path
 import shutil
 from uuid import UUID, uuid4
 
-from openhands_server.event.event_service import EventService
 from openhands_server.local_conversation.local_conversation_event_service import LocalConversationEventService
 from openhands_server.local_conversation.local_conversation_models import LocalConversationInfo, LocalConversationPage, StartLocalConversationRequest, StoredLocalConversation
 from openhands_server.local_conversation.local_conversation_service import LocalConversationService
+from openhands_server.event.event_service import EventService
 from openhands_server.utils.date_utils import utc_now
 
 
