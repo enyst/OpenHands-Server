@@ -1,5 +1,6 @@
 
 
+import asyncio
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 import logging
@@ -9,7 +10,7 @@ from pathlib import Path
 import shutil
 from uuid import UUID, uuid4
 
-from openhands_server.local_conversation.local_conversation import LocalConversation
+from openhands_server.local_conversation.local_conversation_event_service import LocalConversationEventService
 from openhands_server.local_conversation.local_conversation_models import LocalConversationInfo, LocalConversationPage, StartLocalConversationRequest, StoredLocalConversation
 from openhands_server.local_conversation.local_conversation_service import LocalConversationService
 
@@ -23,19 +24,22 @@ class DefaultLocalConversationService(LocalConversationService):
 
     file_store_path: Path = field(default=Path("/workspace/conversations"))
     workspace_path: Path = field(default=Path("/workspace"))
-    _running_conversations: dict[UUID, LocalConversation] = field(default_factory=dict)
+    _running_conversations: dict[UUID, LocalConversationEventService] = field(default_factory=dict)
 
     async def get_local_conversation(self, id: UUID) -> LocalConversationInfo:
-        conversation = self._running_conversations.get(id)
-        if conversation is not None:
-            status = await conversation.get_status()
-            return LocalConversationInfo(**conversation.stored.model_dump(), status=status)
-        
-        meta_file = self.file_store_path / id.hex / "meta.json"
-        json_str = meta_file.read_text()
-        # This works because the only field defined is status which defaults to stopped
-        conversation = LocalConversationInfo.model_validate_json(json_str)
-        return conversation
+        try:
+            conversation = self._running_conversations.get(id)
+            if conversation is not None:
+                status = await conversation.get_status()
+                return LocalConversationInfo(**conversation.stored.model_dump(), status=status)
+            
+            meta_file = self.file_store_path / id.hex / "meta.json"
+            json_str = meta_file.read_text()
+            # This works because the only field defined is status which defaults to stopped
+            conversation = LocalConversationInfo.model_validate_json(json_str)
+            return conversation
+        except Exception:
+            return None
     
     async def search_local_conversations(self, page_id: str | None = None, limit: int = 100) -> LocalConversationPage:
         items = []
@@ -54,28 +58,18 @@ class DefaultLocalConversationService(LocalConversationService):
                 logger.exception('error_reading_conversation:{conversation_dir}', stack_info=True)
         return LocalConversationPage(items=items)
 
-    async def batch_get_local_conversations(self, ids: list[UUID]) -> list[LocalConversationInfo | None]:
-        conversations = []
-        for id in ids:
-            try:
-                conversation = await self.get_local_conversation(id)
-                conversations.append(conversation)
-            except Exception:
-                conversations.append(None)
-        return conversations
-
     # Write Methods
 
     async def start_local_conversation(self, request: StartLocalConversationRequest) -> LocalConversationInfo:
         """ Start a local conversation and return its id. """
         id = uuid4(),
         stored = StoredLocalConversation(id=id, **request.model_dump())
-        conversation = LocalConversation(
+        conversation = LocalConversationEventService(
             stored=stored,
             file_store_path=self.file_store_path / id.hex / "conversation",
             working_dir=self.workspace_path / id.hex,
         )
-        conversation.subscribe(_EventListener(self, id))
+        conversation.subscribe_to_events(_EventListener(self, id))
         self._running_conversations[id] = conversation
         await conversation.start()
         return self.get_local_conversation(id)
@@ -99,6 +93,14 @@ class DefaultLocalConversationService(LocalConversationService):
         shutil.rmtree(self.file_store_path / conversation_id.hex)
         shutil.rmtree(self.workspace_path / conversation_id.hex)
 
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        running_conversations = self._running_conversations
+        self._running_conversations = {}
+        await asyncio.gather(*[
+            conversation.__aexit__(exc_type, exc_value, traceback)
+            for conversation in running_conversations.values()
+        ])
+        
     @classmethod
     def get_instance(cls) -> LocalConversationService:
         return DefaultLocalConversationService()
@@ -106,8 +108,8 @@ class DefaultLocalConversationService(LocalConversationService):
 
 @dataclass
 class _EventListener:
-    conversation: LocalConversation
+    conversation: LocalConversationEventService
 
     async def __call__(self, message: Message):
         # Saving also updates the updated_at timestamp
-        self.conversation.save()
+        self.conversation.save_meta()

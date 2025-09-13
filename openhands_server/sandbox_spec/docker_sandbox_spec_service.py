@@ -6,6 +6,7 @@ import docker
 from docker.errors import NotFound, APIError
 from openhands_server.sandbox_spec.sandbox_spec_service import SandboxSpecService
 from openhands_server.sandbox_spec.sandbox_spec_models import SandboxSpecInfo, SandboxSpecInfoPage
+from openhands_server.utils.date_utils import utc_now
 
 
 @dataclass
@@ -37,7 +38,7 @@ class DockerSandboxSpecService(SandboxSpecService):
             # Docker timestamps are in ISO format
             created_at = datetime.fromisoformat(created_str.replace('Z', '+00:00'))
         except (ValueError, AttributeError):
-            created_at = datetime.now()
+            created_at = utc_now()
         
         return SandboxSpecInfo(
             id=image_id,

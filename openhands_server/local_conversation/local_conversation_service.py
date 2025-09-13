@@ -1,11 +1,11 @@
 
 
 from abc import ABC, abstractmethod
+from tkinter import EventType
 from uuid import UUID
 
 from openhands_server.local_conversation.local_conversation_models import LocalConversationInfo, LocalConversationPage, StartLocalConversationRequest
 from openhands_server.utils.import_utils import get_impl
-
 
 
 class LocalConversationService(ABC):
@@ -18,18 +18,18 @@ class LocalConversationService(ABC):
     """
 
     @abstractmethod
-    async def search_local_conversations(self, user_id: UUID, page_id: str | None = None, limit: int = 100) -> LocalConversationPage:
+    async def search_local_conversations(self, page_id: str | None = None, limit: int = 100) -> LocalConversationPage:
         """Search for local conversations"""
 
     @abstractmethod
-    async def get_local_conversation(self, user_id: UUID, id: UUID) -> LocalConversationInfo:
+    async def get_local_conversation(self, conversation_id: UUID) -> LocalConversationInfo | None:
         """Get a single local conversation info. Return None if the conversation was not found."""
 
     @abstractmethod
-    async def batch_get_local_conversations(self, ids: list[UUID]) -> list[LocalConversationInfo | None]:
+    async def batch_get_local_conversations(self, conversation_ids: list[UUID]) -> list[LocalConversationInfo | None]:
         """Get a batch of local conversations. Return None for any conversation which was not found."""
         results = []
-        for id in ids:
+        for id in conversation_ids:
             result = await self.get_sandbox(id)
             results.append(result)
         return results
@@ -51,6 +51,12 @@ class LocalConversationService(ABC):
     @abstractmethod
     async def delete_local_conversation(self, id: UUID) -> bool:
         """ Delete a local conversation. Stop it if it is running. """
+
+    # Event methods...
+
+    @abstractmethod
+    async def get_event_service(self, id: UUID) -> EventType | None:
+        """ Get an event from a conversation. """
 
     # Lifecycle methods
 

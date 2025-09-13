@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from openhands_server.local_conversation.agent_info import AgentInfo
 from openhands_server.local_conversation.tool_info import ToolInfo
+from openhands_server.utils.date_utils import utc_now
 
 
 # TODO: Review these status with Calvin & Xingyao
@@ -24,8 +25,8 @@ class StartLocalConversationRequest(BaseModel):
 
 class StoredLocalConversation(StartLocalConversationRequest):
     id: UUID
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
 
 
 class LocalConversationInfo(StoredLocalConversation):

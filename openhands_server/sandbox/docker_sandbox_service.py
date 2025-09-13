@@ -22,6 +22,7 @@ from openhands_server.sandbox_spec.docker_sandbox_spec_service import DockerSand
 from openhands_server.sandbox_spec.sandbox_spec_service import (
     get_default_sandbox_spec_service,
 )
+from openhands_server.utils.date_utils import utc_now
 
 @dataclass
 class VolumeMount:
@@ -114,7 +115,7 @@ class DockerSandboxService(SandboxService):
         try:
             created_at = datetime.fromisoformat(created_str.replace("Z", "+00:00"))
         except (ValueError, AttributeError):
-            created_at = datetime.now()
+            created_at = utc_now()
 
         # Generate URL and session key for running containers
         url = None
