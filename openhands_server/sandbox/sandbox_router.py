@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from openhands_server.sandbox.sandbox_models import SandboxInfo, SandboxPage
 from openhands_server.sandbox.sandbox_service import SandboxService, get_default_sandbox_service
-from openhands_server.user.user_dependencies import get_user_id
+from openhands_server.sandbox_spec.sandbox_spec_router import sandbox_spec_service
+from openhands_server.user.user_context import UserContext
+from openhands_server.user.user_dependencies import get_user_context, get_user_id
 from openhands_server.utils.success import Success
 
 router = APIRouter(prefix="/sandbox-containers")
@@ -32,32 +34,36 @@ async def search_sandboxes(
 @router.get("/{id}", responses={
     404: {"description": "Item not found"}
 })
-async def get_sandboxes(id: UUID, user_id: UUID = Depends(get_user_id)) -> SandboxInfo:
+async def get_sandbox(id: UUID, user_id: UUID = Depends(get_user_id)) -> SandboxInfo:
     """Get a single sandbox given an id"""
-    sandboxes = await sandbox_service.get_sandboxes(id)
-    if sandboxes is None or sandboxes.user_id != user_id:
+    sandbox = await sandbox_service.get_sandbox(id)
+    if sandbox is None or sandbox.user_id != user_id:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
-    return sandboxes
+    return sandbox
 
 
 @router.get("/")
 async def batch_get_sandboxes(ids: list[UUID], user_id: UUID = Depends(get_user_id)) -> list[SandboxInfo | None]:
     """Get a batch of sandboxes given their ids, returning null for any missing sandbox."""
     assert len(ids) < 100
-    sandboxess = await sandbox_service.batch_get_sandboxes(user_id, ids)
-    sandboxess = [
-        sandboxes if sandboxes and sandboxes.user_id == user_id else None
-        for sandboxes in sandboxess
+    sandboxes = await sandbox_service.batch_get_sandboxes(user_id, ids)
+    sandboxes = [
+        sandbox if sandbox and sandbox.user_id == user_id else None
+        for sandbox in sandboxes
     ]
-    return sandboxess
+    return sandboxes
 
 
 # Write Methods
 
 @router.post("/")
-async def start_sandbox(user_id: UUID = Depends(get_user_id)) -> UUID:
-    id = await sandbox_service.start_sandbox(user_id)
-    return id
+async def start_sandbox(
+    sandbox_spec_id: str | None = None,
+    user_context: UserContext = Depends(get_user_context),
+) -> SandboxInfo:
+    sandbox_spec = await sandbox_spec_service.get_default_sandbox_spec()
+    info = await sandbox_service.start_sandbox(user_context, sandbox_spec.id)
+    return info
 
 
 @router.post("/{id}/pause", responses={

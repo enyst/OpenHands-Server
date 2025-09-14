@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 from openhands_server.sandbox.sandbox_models import SandboxInfo, SandboxPage
+from openhands_server.user.user_context import UserContext
 from openhands_server.utils.import_utils import get_impl
 
 
@@ -30,7 +31,7 @@ class SandboxService(ABC):
         return results
 
     @abstractmethod
-    async def start_sandbox(self, user_id: UUID, sandbox_spec_id: str) -> SandboxInfo:
+    async def start_sandbox(self, user_context: UserContext, sandbox_spec_id: str) -> SandboxInfo:
         """Begin the process of starting a sandbox. Return the info on the new sandbox """
 
     @abstractmethod

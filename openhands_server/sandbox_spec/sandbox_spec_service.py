@@ -21,6 +21,11 @@ class SandboxSpecService(ABC):
     async def get_sandbox_spec(self, id: str) -> SandboxSpecInfo | None:
         """Get a single sandbox spec, returning None if not found."""
 
+    async def get_default_sandbox_spec(self) -> SandboxSpecInfo:
+        """ Get the default sandbox spec """
+        page = await self.search_sandbox_specs()
+        return page.items[0]
+
     async def batch_get_sandbox_specs(self, ids: list[str]) -> list[SandboxSpecInfo | None]:
         """Get a batch of sandbox specs, returning None for any spec which was not found"""
         results = [

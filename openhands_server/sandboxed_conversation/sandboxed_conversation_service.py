@@ -11,11 +11,7 @@ from openhands_server.utils.import_utils import get_impl
 
 class SandboxedConversationService(ABC):
     """
-    Sandboxed conversations have no concept of a user - it is whoever has been granted access to
-    the sandbox in which the conversation is being run.
-
-    A sandboxed conversation service is run in the current environment, but it may also pass events
-    to another url or process.
+    Service for interacting with sandboxed conversations.
     """
 
     @abstractmethod
