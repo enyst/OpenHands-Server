@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from tkinter import EventType
 from uuid import UUID
 
-from openhands_server.event.read_only_event_service import ReadOnlyEventService
+from openhands_server.event.read_only_event_context import ReadOnlyEventContext
 from openhands_server.sandboxed_conversation.sandboxed_conversation_models import SandboxedConversationInfo, SandboxedConversationPage, StartSandboxedConversationRequest
 from openhands_server.utils.import_utils import get_impl
 
@@ -34,7 +34,7 @@ class SandboxedConversationService(ABC):
     # Event methods...
 
     @abstractmethod
-    async def get_event_service(self, id: UUID) -> ReadOnlyEventService | None:
+    async def get_event_context(self, id: UUID) -> ReadOnlyEventContext | None:
         """ Get an event service for a conversation. """
 
     # Lifecycle methods

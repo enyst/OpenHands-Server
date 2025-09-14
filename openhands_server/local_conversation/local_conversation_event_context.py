@@ -8,14 +8,14 @@ from uuid import UUID
 from openhands.sdk import Conversation, EventBase, LocalFileStore, Message
 from openhands.sdk.utils.async_utils import AsyncConversationCallback, AsyncCallbackWrapper
 from openhands_server.event.event_models import EventPage
-from openhands_server.event.event_service import EventService
+from openhands_server.event.event_context import EventContext
 from openhands_server.local_conversation.local_conversation_models import ConversationStatus, StoredLocalConversation
 from openhands_server.utils.date_utils import utc_now
 from openhands_server.utils.pub_sub import PubSub
 
 
 @dataclass
-class LocalConversationEventService(EventService):
+class LocalConversationEventContext(EventContext):
     """ 
     Event service for a conversation running locally. Use an event manager to start the service before use
     """

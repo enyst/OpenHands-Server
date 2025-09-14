@@ -10,10 +10,10 @@ from pathlib import Path
 import shutil
 from uuid import UUID, uuid4
 
-from openhands_server.local_conversation.local_conversation_event_service import LocalConversationEventService
+from openhands_server.local_conversation.local_conversation_event_context import LocalConversationEventContext
 from openhands_server.local_conversation.local_conversation_models import LocalConversationInfo, LocalConversationPage, StartLocalConversationRequest, StoredLocalConversation
 from openhands_server.local_conversation.local_conversation_service import LocalConversationService
-from openhands_server.event.event_service import EventService
+from openhands_server.event.event_context import EventContext
 from openhands_server.utils.date_utils import utc_now
 
 
@@ -29,7 +29,7 @@ class DefaultLocalConversationService(LocalConversationService):
 
     file_store_path: Path = field(default=Path("/workspace/conversations"))
     workspace_path: Path = field(default=Path("/workspace"))
-    _conversations: dict[UUID, LocalConversationEventService] | None = field(default=None, init=False)
+    _conversations: dict[UUID, LocalConversationEventContext] | None = field(default=None, init=False)
 
     async def get_local_conversation(self, id: UUID) -> LocalConversationInfo:
         conversation = self._conversations.get(id)
@@ -67,7 +67,7 @@ class DefaultLocalConversationService(LocalConversationService):
         """ Start a local conversation and return its id. """
         id = uuid4(),
         stored = StoredLocalConversation(id=id, **request.model_dump())
-        conversation = LocalConversationEventService(
+        conversation = LocalConversationEventContext(
             stored=stored,
             file_store_path=self.file_store_path / id.hex / "conversation",
             working_dir=self.workspace_path / id.hex,
@@ -96,10 +96,10 @@ class DefaultLocalConversationService(LocalConversationService):
         shutil.rmtree(self.file_store_path / conversation_id.hex)
         shutil.rmtree(self.workspace_path / conversation_id.hex)
 
-    async def get_event_service(self, id: UUID) -> EventService | None:
-        event_service = self._conversations.get(id)
-        if event_service:
-            return event_service
+    async def get_event_context(self, id: UUID) -> EventContext | None:
+        event_context = self._conversations.get(id)
+        if event_context:
+            return event_context
 
     async def __aenter__(self):
         conversations = {}
@@ -107,7 +107,7 @@ class DefaultLocalConversationService(LocalConversationService):
             meta_file = conversation_dir / "meta.json"
             json_str = meta_file.read_text()
             id = UUID(conversation_dir.name)
-            conversations[id] = LocalConversationEventService(
+            conversations[id] = LocalConversationEventContext(
                 stored=StoredLocalConversation.model_validate_json(json_str),
                 file_store_path=self.file_store_path / id.hex,
                 working_dir=self.workspace_path / id.hex,
@@ -130,7 +130,7 @@ class DefaultLocalConversationService(LocalConversationService):
 
 @dataclass
 class _EventListener:
-    conversation: LocalConversationEventService
+    conversation: LocalConversationEventContext
 
     async def __call__(self, message: Message):
         self.conversation.stored.updated_at = utc_now()

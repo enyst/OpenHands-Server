@@ -10,8 +10,8 @@ from openhands.sdk.utils.async_utils import AsyncConversationCallback
 from openhands_server.event.event_models import EventPage
 
 
-class ReadOnlyEventService(ABC):
-    """ Service for getting events from a conversation which may not be running  """
+class ReadOnlyEventContext(ABC):
+    """ Object for getting events - which may be related to a conversation, and may or may not be running """
 
     @abstractmethod
     async def get_event(self, event_id: str) -> EventBase | None:

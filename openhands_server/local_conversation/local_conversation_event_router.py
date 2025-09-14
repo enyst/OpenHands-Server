@@ -37,10 +37,10 @@ async def search_local_conversation_events(
     """ Search / List local events """
     assert limit > 0
     assert limit <= 100
-    event_service = await local_conversation_service.get_event_service(conversation_id)
-    if event_service is None:
+    event_context = await local_conversation_service.get_event_context(conversation_id)
+    if event_context is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
-    return await event_service.search(page_id, limit)
+    return await event_context.search(page_id, limit)
 
 
 @router.get("/{event_id}", responses={
@@ -48,10 +48,10 @@ async def search_local_conversation_events(
 })
 async def get_local_conversation_event(conversation_id: UUID, event_id: UUID) -> EventBase:
     """ Get a local conversation given an id """
-    event_service = await local_conversation_service.get_event_service(conversation_id)
-    if event_service is None:
+    event_context = await local_conversation_service.get_event_context(conversation_id)
+    if event_context is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
-    event = event_service.get_event(event_id)
+    event = event_context.get_event(event_id)
     if event is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
     return event
@@ -60,10 +60,10 @@ async def get_local_conversation_event(conversation_id: UUID, event_id: UUID) ->
 @router.get("/")
 async def batch_get_local_conversation_events(conversation_id: UUID, event_ids: list[UUID]) -> list[EventBase | None]:
     """Get a batch of local conversations given their ids, returning null for any missing spec."""
-    event_service = await local_conversation_service.get_event_service(conversation_id)
-    if event_service is None:
+    event_context = await local_conversation_service.get_event_context(conversation_id)
+    if event_context is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
-    events = await event_service.batch_get_events(event_ids)
+    events = await event_context.batch_get_events(event_ids)
     return events
 
 
@@ -72,10 +72,10 @@ async def batch_get_local_conversation_events(conversation_id: UUID, event_ids: 
 @router.post("/")
 async def send_message(conversation_id: UUID, message: Message) -> Success:
     """ Start a local conversation"""
-    event_service = await local_conversation_service.get_event_service(conversation_id)
-    if event_service is None:
+    event_context = await local_conversation_service.get_event_context(conversation_id)
+    if event_context is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
-    await event_service.send_message(message)
+    await event_context.send_message(message)
     return Success()
 
 
@@ -85,22 +85,22 @@ async def socket(
     websocket: WebSocket,
 ):
     await websocket.accept()
-    event_service = await local_conversation_service.get_event_service(conversation_id)
-    if event_service is None:
+    event_context = await local_conversation_service.get_event_context(conversation_id)
+    if event_context is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
-    subscriber_id = event_service.subscribe_to_events(_WebSocketSubscriber(websocket))
+    subscriber_id = event_context.subscribe_to_events(_WebSocketSubscriber(websocket))
     try:
         while websocket.application_state == WebSocketState.CONNECTED:
             try:
                 data = await websocket.receive_json()
                 message = Message.model_validate(data)
-                await event_service.send_message(message)
+                await event_context.send_message(message)
             except WebSocketDisconnect:
-                event_service.unsubscribe_from_events(subscriber_id)
+                event_context.unsubscribe_from_events(subscriber_id)
             except Exception:
                 logger.exception('error_in_subscription', stack_info=True)
     finally:
-        await event_service.unsubscribe_from_events(subscriber_id)
+        await event_context.unsubscribe_from_events(subscriber_id)
 
 
 @dataclass

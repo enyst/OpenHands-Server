@@ -13,7 +13,7 @@ class DockerSandboxedConversationService(SandboxedConversationService):
     async def batch_get_sandboxed_conversations(self, user_id, conversation_ids):
         raise NotImplementedError
 
-    async def get_event_service(self, id):
+    async def get_event_context(self, id):
         raise NotImplementedError
 
     @classmethod

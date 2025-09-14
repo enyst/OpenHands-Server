@@ -7,11 +7,11 @@ from uuid import UUID
 from openhands.sdk import Message
 from openhands.sdk.utils.async_utils import AsyncConversationCallback
 
-from openhands_server.event.read_only_event_service import ReadOnlyEventService
+from openhands_server.event.read_only_event_context import ReadOnlyEventContext
 
 
-class EventService(ReadOnlyEventService, ABC):
-    """ Service for getting / updating event streams. """
+class EventContext(ReadOnlyEventContext, ABC):
+    """ Object for getting / updating event streams. """
 
     @abstractmethod
     async def send_message(self, message: Message):
