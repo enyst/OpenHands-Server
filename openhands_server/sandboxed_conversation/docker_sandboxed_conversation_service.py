@@ -1,16 +1,13 @@
-import json
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
 import docker
 import httpx
+from sqlalchemy import select
+
 from openhands.sdk import EventBase
 from openhands.sdk.llm.utils.metrics import MetricsSnapshot
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from openhands_server.database import AsyncSessionLocal
 from openhands_server.event.event_models import EventPage
 from openhands_server.event.read_only_event_context import ReadOnlyEventContext
@@ -31,10 +28,9 @@ from openhands_server.sandboxed_conversation.sandboxed_conversation_service impo
     SandboxedConversationService,
 )
 from openhands_server.sandboxed_conversation.sandboxed_database_models import (
-    StoredSandboxedConversationInfo,
     StoredConversationMetricsSnapshot,
+    StoredSandboxedConversationInfo,
 )
-from openhands_server.utils.date_utils import utc_now
 
 
 @dataclass

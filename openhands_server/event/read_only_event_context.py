@@ -1,9 +1,6 @@
 from abc import ABC, abstractmethod
-from uuid import UUID
 
-from openhands.sdk import EventBase, Message
-from openhands.sdk.utils.async_utils import AsyncConversationCallback
-
+from openhands.sdk import EventBase
 from openhands_server.event.event_models import EventPage
 
 

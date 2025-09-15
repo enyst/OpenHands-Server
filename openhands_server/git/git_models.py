@@ -1,6 +1,6 @@
+import uuid
 from enum import Enum
 from uuid import UUID
-import uuid
 
 from pydantic import BaseModel, Field
 

@@ -1,7 +1,6 @@
 """Main entry point for OpenHands Server."""
 
 import argparse
-import sys
 
 
 def main() -> None:
@@ -27,6 +26,7 @@ def main() -> None:
     print(f"OpenHands Server starting on {args.host}:{args.port}")
 
     import uvicorn
+
     from .app import app
 
     uvicorn.run(app, host=args.host, port=args.port)

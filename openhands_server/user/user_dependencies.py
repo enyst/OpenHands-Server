@@ -6,6 +6,7 @@ from fastapi import Depends, Request
 from openhands_server.user.user_context import UserContext
 from openhands_server.user.user_models import AuthType
 
+
 # TODO: Implement this correctly to match https://github.com/All-Hands-AI/OpenHands/issues/10850
 
 

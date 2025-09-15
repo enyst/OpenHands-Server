@@ -2,6 +2,7 @@
 
 from typing import Annotated
 from uuid import UUID
+
 from fastapi import APIRouter, HTTPException, Query, status
 
 from openhands_server.local_conversation.local_conversation_models import (
@@ -13,6 +14,7 @@ from openhands_server.local_conversation.local_conversation_service import (
     get_default_local_conversation_service,
 )
 from openhands_server.utils.success import Success
+
 
 router = APIRouter(prefix="/local-conversations")
 local_conversation_service = get_default_local_conversation_service()

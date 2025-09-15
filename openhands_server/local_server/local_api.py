@@ -15,6 +15,7 @@ from openhands_server.utils.middleware import (
     ValidateSessionAPIKeyMiddleware,
 )
 
+
 api = FastAPI()
 local_server_config = get_default_local_server_config()
 

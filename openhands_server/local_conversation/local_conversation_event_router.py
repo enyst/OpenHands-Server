@@ -3,10 +3,11 @@ Local Conversation router for OpenHands Server. Local Conversations rely on a si
 for validation
 """
 
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 from typing import Annotated
 from uuid import UUID
+
 from fastapi import (
     APIRouter,
     HTTPException,
@@ -15,8 +16,8 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
-
 from fastapi.websockets import WebSocketState
+
 from openhands.sdk import EventBase, Message
 from openhands_server.local_conversation.local_conversation_models import (
     LocalConversationPage,
@@ -25,6 +26,7 @@ from openhands_server.local_conversation.local_conversation_service import (
     get_default_local_conversation_service,
 )
 from openhands_server.utils.success import Success
+
 
 router = APIRouter(prefix="/local-conversations/{conversation_id}/events")
 local_conversation_service = get_default_local_conversation_service()

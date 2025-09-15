@@ -1,10 +1,9 @@
-from dataclasses import dataclass, field
 import uuid
-from typing import Dict
+from dataclasses import dataclass, field
 
-from openhands.sdk.utils.async_utils import AsyncConversationCallback
 from openhands.sdk.event import Event
 from openhands.sdk.logger import get_logger
+from openhands.sdk.utils.async_utils import AsyncConversationCallback
 
 
 logger = get_logger(__name__)

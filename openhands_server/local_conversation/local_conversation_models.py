@@ -1,10 +1,10 @@
 from datetime import datetime
 from enum import Enum
 from uuid import UUID
+
 from pydantic import BaseModel, Field
 
 from openhands.sdk.llm.utils.metrics import MetricsSnapshot
-from openhands_server.git.git_models import GitInfo
 from openhands_server.local_conversation.agent_info import AgentInfo
 from openhands_server.utils.date_utils import utc_now
 

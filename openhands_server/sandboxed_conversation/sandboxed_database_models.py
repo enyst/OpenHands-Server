@@ -1,5 +1,6 @@
 import uuid
-from sqlalchemy import JSON, Column, DateTime, Float, Integer, String, UUID
+
+from sqlalchemy import JSON, UUID, Column, DateTime, Float, Integer, String
 
 from openhands_server.database import Base
 from openhands_server.utils.date_utils import utc_now
