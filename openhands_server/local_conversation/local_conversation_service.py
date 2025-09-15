@@ -7,6 +7,7 @@ from openhands_server.local_conversation.local_conversation_models import (
     LocalConversationPage,
     StartLocalConversationRequest,
 )
+from openhands_server.local_server.local_server_config import LocalServerConfig
 from openhands_server.utils.import_utils import get_impl
 
 
@@ -78,7 +79,7 @@ class LocalConversationService(ABC):
 
     @classmethod
     @abstractmethod
-    def get_instance(cls) -> "LocalConversationService":
+    def get_instance(cls, local_server_config: LocalServerConfig) -> "LocalConversationService":
         """Get an instance of runtime image service"""
 
 
@@ -100,5 +101,5 @@ def get_default_local_conversation_service() -> LocalConversationService:
     impl = get_impl(
         LocalConversationService, local_server_config.local_conversation_service
     )
-    _local_conversation_service = impl.get_instance()
+    _local_conversation_service = impl.get_instance(local_server_config)
     return _local_conversation_service
