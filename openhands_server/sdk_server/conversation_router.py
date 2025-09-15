@@ -40,10 +40,10 @@ async def search_conversations(
     return await conversation_service.search_conversations(page_id, limit)
 
 
-@router.get("/{id}", responses={404: {"description": "Item not found"}})
-async def get_conversation(id: UUID) -> ConversationInfo:
+@router.get("/{conversation_id}", responses={404: {"description": "Item not found"}})
+async def get_conversation(conversation_id: UUID) -> ConversationInfo:
     """Get a local conversation given an id"""
-    conversation = await conversation_service.get_conversation(id)
+    conversation = await conversation_service.get_conversation(conversation_id)
     if conversation is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND)
     return conversation
@@ -72,25 +72,29 @@ async def start_conversation(
     return info
 
 
-@router.post("/{id}/pause", responses={404: {"description": "Item not found"}})
-async def pause_conversation(id: UUID) -> Success:
-    paused = await conversation_service.pause_conversation(id)
+@router.post(
+    "/{conversation_id}/pause", responses={404: {"description": "Item not found"}}
+)
+async def pause_conversation(conversation_id: UUID) -> Success:
+    paused = await conversation_service.pause_conversation(conversation_id)
     if not paused:
         raise HTTPException(status.HTTP_400_BAD_REQUEST)
     return Success()
 
 
-@router.post("/{id}/resume", responses={404: {"description": "Item not found"}})
-async def resume_conversation(id: UUID) -> Success:
-    paused = await conversation_service.resume_conversation(id)
+@router.post(
+    "/{conversation_id}/resume", responses={404: {"description": "Item not found"}}
+)
+async def resume_conversation(conversation_id: UUID) -> Success:
+    paused = await conversation_service.resume_conversation(conversation_id)
     if not paused:
         raise HTTPException(status.HTTP_400_BAD_REQUEST)
     return Success()
 
 
-@router.delete("/{id}", responses={404: {"description": "Item not found"}})
-async def delete_conversation(id: UUID) -> Success:
-    deleted = await conversation_service.delete_conversation(id)
+@router.delete("/{conversation_id}", responses={404: {"description": "Item not found"}})
+async def delete_conversation(conversation_id: UUID) -> Success:
+    deleted = await conversation_service.delete_conversation(conversation_id)
     if not deleted:
         raise HTTPException(status.HTTP_400_BAD_REQUEST)
     return Success()
