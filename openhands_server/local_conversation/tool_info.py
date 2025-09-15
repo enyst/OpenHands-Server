@@ -3,6 +3,7 @@ from openhands.sdk import Tool
 from pydantic import BaseModel
 from openhands.tools import BashTool, FileEditorTool, TaskTrackerTool
 
+# TODO: Replace with items from SDK
 
 class ToolInfo(BaseModel, ABC):
     """Info about a tool for use in an LLM."""
