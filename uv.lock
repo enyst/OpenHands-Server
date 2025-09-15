@@ -1368,7 +1368,7 @@ provides-extras = ["dev"]
 dev = [
     { name = "httpx", specifier = ">=0.25" },
     { name = "pre-commit", specifier = ">=4.3" },
-    { name = "pycodestyle", specifier = ">=2.12.0" },
+    { name = "pycodestyle", specifier = ">=2.12" },
     { name = "pyinstaller", specifier = ">=6.15" },
     { name = "pyright", specifier = ">=1.1.405" },
     { name = "pytest", specifier = ">=8.4.1" },

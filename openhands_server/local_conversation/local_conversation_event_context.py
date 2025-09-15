@@ -3,7 +3,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from uuid import UUID
 
-from openhands.sdk import Conversation, EventBase, LocalFileStore, Message, TextContent
+import openhands.tools    
+from openhands.sdk import Conversation, EventBase, LocalFileStore, Message, Agent, create_mcp_tools
 from openhands.sdk.conversation.state import AgentExecutionStatus
 from openhands.sdk.utils.async_utils import (
     AsyncCallbackWrapper,
@@ -26,7 +27,7 @@ class LocalConversationEventContext(EventContext):
 
     stored: StoredLocalConversation
     file_store_path: Path
-    working_dir: str
+    working_dir: Path
     _lock: asyncio.Lock = field(default_factory=asyncio.Lock, init=False)
     _conversation: Conversation | None = field(default=None, init=False)
     _pub_sub: PubSub = field(default_factory=PubSub, init=False)
@@ -41,19 +42,17 @@ class LocalConversationEventContext(EventContext):
         meta_file.write_text(self.stored.model_dump_json())
 
     async def get_event(self, event_id: str) -> EventBase | None:
-        # TODO: It would be better to be able to get the event by its id directly here!
-        # Is there an API for this?
-        event = next(
-            (
-                event
-                for event in self._conversation.state.events
-                if event.id == event_id
-            ),
-            None,
-        )
-        return event
+        if self._conversation is None:
+            raise RuntimeError("Conversation not started")
+        async with self._lock:
+            with self._conversation.state as state:
+                event_id_idx = state.events.get_index(event_id)
+                return state.events[event_id_idx]
 
-    async def search_events(self, page_id: str = None, limit: int = 100) -> EventPage:
+    async def search_events(self, page_id: str | None = None, limit: int = 100) -> EventPage:
+        if self._conversation is None:
+            raise RuntimeError("Conversation not started")
+        
         items = []
         async with self._lock:
             with self._conversation.state as state:
@@ -75,6 +74,10 @@ class LocalConversationEventContext(EventContext):
 
         return EventPage(items=items)
 
+    async def search(self, page_id: str | None = None, limit: int = 100) -> EventPage:
+        """Alias for search_events to match the expected interface."""
+        return await self.search_events(page_id, limit)
+
     async def send_message(self, message: Message):
         async with self._lock:
             loop = asyncio.get_running_loop()
@@ -92,25 +95,41 @@ class LocalConversationEventContext(EventContext):
 
     async def start(self):
         async with self._lock:
-            if self._conversation:
-                with self._conversation.state as state:
-                    # Agent has finished
-                    if state.agent_status == AgentExecutionStatus.FINISHED:
-                        return
-
-                    # Agent is already running
-                    if state.agent_status not in [AgentExecutionStatus.PAUSED, AgentExecutionStatus.WAITING_FOR_CONFIRMATION]:
-                        return
-
-            agent = self.stored.agent.create_agent(self.working_dir)
+            llm = self.stored.llm
+            tools = []
+            
+            # Create tools from tool specs
+            for tool_spec in self.stored.tools:
+                if tool_spec.name not in openhands.tools.__dict__:
+                    continue
+                tool_class = openhands.tools.__dict__[tool_spec.name]
+                tools.append(tool_class.create(**tool_spec.params))
+            
+            # Add MCP tools if configured
+            if self.stored.mcp_config:
+                mcp_tools = create_mcp_tools(self.stored.mcp_config, timeout=30)
+                tools.extend(mcp_tools)
+            
+            agent = Agent(llm=llm, tools=tools, agent_context=self.stored.agent_context)
             conversation = Conversation(
                 agent=agent,
-                callbacks=[AsyncCallbackWrapper(self._pub_sub, asyncio.get_running_loop())],
+                callbacks=[AsyncCallbackWrapper(self._pub_sub, loop=asyncio.get_running_loop())],
                 persist_filestore=LocalFileStore(str(self.file_store_path / "events")),
             )
+            
+            # Set confirmation mode if enabled
+            conversation.set_confirmation_mode(self.stored.confirmation_mode)
             self._conversation = conversation
+            await self.run()
+
+
+    async def run(self):
+        """Run the conversation asynchronously."""
+        if not self._conversation:
+            raise RuntimeError("Conversation not started")
+        async with self._lock:
             loop = asyncio.get_running_loop()
-            loop.run_in_executor(None, conversation.run)
+            loop.run_in_executor(None, self._conversation.run)
 
     async def pause(self):
         async with self._lock:
