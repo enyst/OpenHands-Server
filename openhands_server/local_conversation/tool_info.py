@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import Annotated, Literal, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from openhands.sdk import Tool
 from openhands.tools import BashTool, FileEditorTool, TaskTrackerTool
@@ -18,6 +19,7 @@ class ToolInfo(BaseModel, ABC):
 
 
 class BashToolInfo(ToolInfo):
+    type: Literal["BashTool"] = "BashTool"
     working_dir: str
 
     def create_tool(self):
@@ -25,15 +27,18 @@ class BashToolInfo(ToolInfo):
 
 
 class FileEditorToolInfo(ToolInfo):
+    type: Literal["FileEditorTool"] = "FileEditorTool"
+
     def create_tool(self):
         return FileEditorTool.create()
 
 
 class TaskTrackerToolInfo(ToolInfo):
+    type: Literal["TaskTrackerTool"] = "TaskTrackerTool"
     save_dir: str
 
     def create_tool(self):
         return TaskTrackerTool.create(save_dir=self.save_dir)
 
 
-ToolInfoType = BashToolInfo | FileEditorToolInfo | TaskTrackerToolInfo
+ToolInfoType = Annotated[Union[BashToolInfo, FileEditorToolInfo, TaskTrackerToolInfo], Field(discriminator="type")]

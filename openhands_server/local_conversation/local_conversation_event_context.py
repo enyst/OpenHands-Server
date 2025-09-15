@@ -3,7 +3,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from uuid import UUID
 
-from openhands.sdk import Conversation, EventBase, LocalFileStore, Message
+from openhands.sdk import Conversation, EventBase, LocalFileStore, Message, TextContent
+from openhands.sdk.conversation.state import AgentExecutionStatus
 from openhands.sdk.utils.async_utils import (
     AsyncCallbackWrapper,
     AsyncConversationCallback,
@@ -11,7 +12,6 @@ from openhands.sdk.utils.async_utils import (
 from openhands_server.event.event_context import EventContext
 from openhands_server.event.event_models import EventPage
 from openhands_server.local_conversation.local_conversation_models import (
-    ConversationStatus,
     StoredLocalConversation,
 )
 from openhands_server.utils.date_utils import utc_now
@@ -103,44 +103,44 @@ class LocalConversationEventContext(EventContext):
                     ):
                         return
 
+                # TODO: Replace this with the real message   
+                self._conversation.send_message(
+                    Message(
+                        role="user",
+                        content=[TextContent(text="Flip a coin!")]
+                    )
+                )
+
                 self._conversation.run()
 
             agent = self.stored.agent.create_agent(self.working_dir)
             conversation = Conversation(
                 agent=agent,
-                callbacks=[AsyncCallbackWrapper(self._pub_sub)],
-                persist_filestore=LocalFileStore(self.file_store_path / "events"),
+                callbacks=[AsyncCallbackWrapper(self._pub_sub, asyncio.get_running_loop())],
+                persist_filestore=LocalFileStore(str(self.file_store_path / "events")),
             )
             self._conversation = conversation
             loop = asyncio.get_running_loop()
-            asyncio.create_task(loop.run_in_executor(None, conversation.run))
+            loop.run_in_executor(None, conversation.run)
 
     async def pause(self):
         async with self._lock:
             if self._conversation:
                 loop = asyncio.get_running_loop()
-                asyncio.create_task(
-                    loop.run_in_executor(None, self._conversation.pause)
-                )
+                loop.run_in_executor(None, self._conversation.pause)
 
     async def close(self):
         async with self._lock:
             if self._conversation:
                 loop = asyncio.get_running_loop()
-                asyncio.create_task(
-                    loop.run_in_executor(None, self._conversation.close)
-                )
+                loop.run_in_executor(None, self._conversation.close)
 
-    async def get_status(self) -> ConversationStatus:
+    async def get_status(self) -> AgentExecutionStatus:
         async with self._lock:
             if not self._conversation:
-                return ConversationStatus.STOPPED
+                return AgentExecutionStatus.ERROR
             with self._conversation.state as state:
-                if state.agent_paused:
-                    return ConversationStatus.PAUSED
-                if state.agent_finished:
-                    return ConversationStatus.FINISHED
-            return ConversationStatus.RUNNING
+                return state.agent_status
 
     async def __aenter__(self):
         await self.start()

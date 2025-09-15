@@ -34,7 +34,7 @@ class DefaultLocalConversationService(LocalConversationService):
     """
 
     conversations_path: Path = field(default=Path("workspace/conversations"))
-    workspace_path: Path = field(default=Path("/workspace/projects"))
+    workspace_path: Path = field(default=Path("workspace/projects"))
     _conversations: dict[UUID, LocalConversationEventContext] | None = field(
         default=None, init=False
     )
@@ -78,17 +78,21 @@ class DefaultLocalConversationService(LocalConversationService):
         self, request: StartLocalConversationRequest
     ) -> LocalConversationInfo:
         """Start a local conversation and return its id."""
-        id = (uuid4(),)
+        id = uuid4()
         stored = StoredLocalConversation(id=id, **request.model_dump())
+        file_store_path = self.conversations_path / id.hex / "conversation"
+        working_dir = self.workspace_path / id.hex
+        file_store_path.mkdir(parents=True)
+        working_dir.mkdir(parents=True, exist_ok=True)
         conversation = LocalConversationEventContext(
             stored=stored,
-            file_store_path=self.conversations_path / id.hex / "conversation",
-            working_dir=self.workspace_path / id.hex,
+            file_store_path=file_store_path,
+            working_dir=working_dir,
         )
-        conversation.subscribe_to_events(_EventListener(self, id))
+        conversation.subscribe_to_events(_EventListener(self))
         self._conversations[id] = conversation
         await conversation.start()
-        return self.get_local_conversation(id)
+        return await self.get_local_conversation(id)
 
     async def pause_local_conversation(self, conversation_id: UUID) -> bool:
         conversation = self._conversations.get(conversation_id)
@@ -118,14 +122,18 @@ class DefaultLocalConversationService(LocalConversationService):
         self.conversations_path.mkdir(parents=True, exist_ok=True)
         conversations = {}
         for conversation_dir in self.conversations_path.iterdir():
-            meta_file = conversation_dir / "meta.json"
-            json_str = meta_file.read_text()
-            id = UUID(conversation_dir.name)
-            conversations[id] = LocalConversationEventContext(
-                stored=StoredLocalConversation.model_validate_json(json_str),
-                file_store_path=self.conversations_path / id.hex,
-                working_dir=self.workspace_path / id.hex,
-            )
+            try:
+                meta_file = conversation_dir / "meta.json"
+                json_str = meta_file.read_text()
+                id = UUID(conversation_dir.name)
+                conversations[id] = LocalConversationEventContext(
+                    stored=StoredLocalConversation.model_validate_json(json_str),
+                    file_store_path=self.conversations_path / id.hex,
+                    working_dir=self.workspace_path / id.hex,
+                )
+            except Exception:
+                logger.exception(f'error_loading_conversation:{conversation_dir}', stack_info=True)
+                shutil.rmtree(conversation_dir)
         self._conversations = conversations
         return self
 
@@ -142,7 +150,10 @@ class DefaultLocalConversationService(LocalConversationService):
 
     @classmethod
     def get_instance(cls, local_server_config: LocalServerConfig) -> LocalConversationService:
-        return DefaultLocalConversationService()
+        return DefaultLocalConversationService(
+            conversations_path=local_server_config.conversations_path,
+            workspace_path=local_server_config.workspace_path,
+        )
 
 
 @dataclass

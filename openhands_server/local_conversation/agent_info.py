@@ -1,14 +1,13 @@
-from huggingface_hub import Agent
 from pydantic import BaseModel
 
-from openhands.sdk import LLM, Tool
+from openhands.sdk import Agent, LLM, Tool
 from openhands.tools import BashTool, FileEditorTool, TaskTrackerTool
-from openhands_server.local_conversation.tool_info import ToolInfo
+from openhands_server.local_conversation.tool_info import ToolInfoType
 
 
 class AgentInfo(BaseModel):
     llm: LLM
-    tools: list[ToolInfo] = None
+    tools: list[ToolInfoType] = None
 
     def create_agent(self, cwd: str):
         return Agent(

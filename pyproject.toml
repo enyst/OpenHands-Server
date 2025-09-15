@@ -21,8 +21,8 @@ dependencies = [
   "alembic>=1.13",
   "docker>=7.1,<8",
   "fastapi>=0.104",
-  "openhands-sdk @ git+https://github.com/All-Hands-AI/agent-sdk.git@b63f92733928c4994d0edc30abd6373d6ef03ef0#subdirectory=openhands/sdk",
-  "openhands-tools @ git+https://github.com/All-Hands-AI/agent-sdk.git@b63f92733928c4994d0edc30abd6373d6ef03ef0#subdirectory=openhands/tools",
+  "openhands-sdk @ git+https://github.com/All-Hands-AI/agent-sdk.git@d014593e9798ea707361b3245df0c065bf0b66ea#subdirectory=openhands/sdk",
+  "openhands-tools @ git+https://github.com/All-Hands-AI/agent-sdk.git@d014593e9798ea707361b3245df0c065bf0b66ea#subdirectory=openhands/tools",
   "pydantic>=2",
   "sqlalchemy>=2",
   "uvicorn>=0.31.1",
@@ -75,5 +75,5 @@ lint.isort.known-first-party = [ "openhands" ]
 lint.isort.lines-after-imports = 2
 
 [tool.uv.sources]
-openhands-sdk = { git = "https://github.com/All-Hands-AI/agent-sdk.git", subdirectory = "openhands/sdk", rev = "b63f92733928c4994d0edc30abd6373d6ef03ef0" }
-openhands-tools = { git = "https://github.com/All-Hands-AI/agent-sdk.git", subdirectory = "openhands/tools", rev = "b63f92733928c4994d0edc30abd6373d6ef03ef0" }
+openhands-sdk = { git = "https://github.com/All-Hands-AI/agent-sdk.git", subdirectory = "openhands/sdk", rev = "d014593e9798ea707361b3245df0c065bf0b66ea" }
+openhands-tools = { git = "https://github.com/All-Hands-AI/agent-sdk.git", subdirectory = "openhands/tools", rev = "d014593e9798ea707361b3245df0c065bf0b66ea" }
