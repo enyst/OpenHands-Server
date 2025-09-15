@@ -181,7 +181,7 @@ class DockerSandboxService(SandboxService):
         except APIError:
             return SandboxPage(items=[], next_page_id=None)
 
-    async def get_sandboxes(self, id: UUID) -> SandboxInfo | None:
+    async def get_sandbox(self, id: UUID) -> SandboxInfo | None:
         """Get a single sandbox info"""
         try:
             container_name = self._container_name_from_id(id)
@@ -189,6 +189,14 @@ class DockerSandboxService(SandboxService):
             return self._container_to_runtime_info(container)
         except (NotFound, APIError):
             return None
+
+    async def batch_get_sandboxes(self, ids: list[UUID]) -> list[SandboxInfo | None]:
+        """Get multiple sandbox infos"""
+        results = []
+        for sandbox_id in ids:
+            sandbox_info = await self.get_sandbox(sandbox_id)
+            results.append(sandbox_info)
+        return results
 
     async def start_sandbox(self, user_id: UUID, sandbox_spec_id: str) -> UUID:
         """Start a new sandbox"""
