@@ -122,6 +122,7 @@ class LocalConversationEventContext(EventContext):
 
     async def __aenter__(self):
         await self.start()
+        return self
     
     async def __aexit__(self, exc_type, exc_value, traceback):
         self.save_meta()

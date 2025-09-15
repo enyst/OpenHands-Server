@@ -63,6 +63,7 @@ class LocalConversationService(ABC):
 
     async def __aenter__(self):
         """Start using this runtime image service"""
+        return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         """Stop using this runtime image service"""
