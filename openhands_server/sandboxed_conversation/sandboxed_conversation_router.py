@@ -2,6 +2,7 @@
 
 from typing import Annotated
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from openhands_server.sandboxed_conversation.sandboxed_conversation_models import (
@@ -12,6 +13,7 @@ from openhands_server.sandboxed_conversation.sandboxed_conversation_service impo
     get_default_sandboxed_conversation_service,
 )
 from openhands_server.user.user_dependencies import get_user_id
+
 
 router = APIRouter(prefix="/sandboxed-conversations")
 sandboxed_conversation_service = get_default_sandboxed_conversation_service()

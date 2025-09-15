@@ -1,13 +1,14 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional
+
 import docker
-from docker.errors import NotFound, APIError
-from openhands_server.sandbox_spec.sandbox_spec_service import SandboxSpecService
+from docker.errors import APIError, NotFound
+
 from openhands_server.sandbox_spec.sandbox_spec_models import (
     SandboxSpecInfo,
     SandboxSpecInfoPage,
 )
+from openhands_server.sandbox_spec.sandbox_spec_service import SandboxSpecService
 from openhands_server.utils.date_utils import utc_now
 
 
@@ -90,7 +91,7 @@ class DockerSandboxSpecService(SandboxSpecService):
                 items=paginated_images, next_page_id=next_page_id
             )
 
-        except APIError as e:
+        except APIError:
             # Return empty page if there's an API error
             return SandboxSpecInfoPage(items=[], next_page_id=None)
 

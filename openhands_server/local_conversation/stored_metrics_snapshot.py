@@ -1,7 +1,4 @@
-from typing import Optional
-from uuid import UUID
-from pydantic import Field
-from sqlalchemy import Column, Float, Integer, String, UUID as SQLAlchemyUUID
+from sqlalchemy import UUID as SQLAlchemyUUID, Column, Float, Integer, String
 
 from openhands_server.database import Base
 

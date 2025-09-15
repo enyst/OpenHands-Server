@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from tkinter import EventType
 from uuid import UUID
 
 from openhands_server.event.read_only_event_context import ReadOnlyEventContext

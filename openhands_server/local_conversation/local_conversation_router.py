@@ -2,6 +2,7 @@
 
 from typing import Annotated
 from uuid import UUID
+
 from fastapi import APIRouter, HTTPException, Query, status
 
 from openhands_server.local_conversation.local_conversation_models import (
@@ -13,6 +14,7 @@ from openhands_server.local_conversation.local_conversation_service import (
     get_default_local_conversation_service,
 )
 from openhands_server.utils.success import Success
+
 
 router = APIRouter(prefix="/local-conversations")
 local_conversation_service = get_default_local_conversation_service()
@@ -31,9 +33,7 @@ async def search_local_conversations(
     ] = None,
     limit: Annotated[
         int,
-        Query(
-            title="The max number of results in the page", gt=0, lte=100
-        ),
+        Query(title="The max number of results in the page", gt=0, lte=100),
     ] = 100,
 ) -> LocalConversationPage:
     """Search / List local conversations"""

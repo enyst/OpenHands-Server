@@ -1,13 +1,12 @@
 import asyncio
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
 import logging
-from mailbox import Message
-import os
-from pathlib import Path
 import shutil
+from dataclasses import dataclass, field
+from mailbox import Message
+from pathlib import Path
 from uuid import UUID, uuid4
 
+from openhands_server.event.event_context import EventContext
 from openhands_server.local_conversation.local_conversation_event_context import (
     LocalConversationEventContext,
 )
@@ -20,7 +19,6 @@ from openhands_server.local_conversation.local_conversation_models import (
 from openhands_server.local_conversation.local_conversation_service import (
     LocalConversationService,
 )
-from openhands_server.event.event_context import EventContext
 from openhands_server.utils.date_utils import utc_now
 
 

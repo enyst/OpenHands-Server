@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from tkinter import EventType
 from uuid import UUID
 
 from openhands_server.event.event_context import EventContext
@@ -91,10 +90,13 @@ def get_default_local_conversation_service() -> LocalConversationService:
     global _local_conversation_service
     if _local_conversation_service:
         return _local_conversation_service
-    
+
     # TODO: Polymorphic injection may be overkill for the local server - particularly if we
     # place this in the agent SDK.
-    from openhands_server.local_server.local_server_config import get_default_local_server_config
+    from openhands_server.local_server.local_server_config import (
+        get_default_local_server_config,
+    )
+
     local_server_config = get_default_local_server_config()
     _local_conversation_service = get_impl(
         LocalConversationService, local_server_config.local_conversation_service

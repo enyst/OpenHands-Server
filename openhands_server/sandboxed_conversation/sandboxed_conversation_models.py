@@ -1,10 +1,7 @@
-from datetime import datetime
-from enum import Enum
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from openhands_server.local_conversation.agent_info import AgentInfo
 from openhands_server.local_conversation.local_conversation_models import (
     LocalConversationInfo,
 )

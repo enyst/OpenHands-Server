@@ -1,5 +1,6 @@
 from typing import Sequence
 from urllib.parse import urlparse
+
 from fastapi import HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -45,9 +46,9 @@ class CacheControlMiddleware(BaseHTTPMiddleware):
             # The content of the assets directory has fingerprinted file names so we cache aggressively
             response.headers["Cache-Control"] = "public, max-age=2592000, immutable"
         else:
-            response.headers[
-                "Cache-Control"
-            ] = "no-cache, no-store, must-revalidate, max-age=0"
+            response.headers["Cache-Control"] = (
+                "no-cache, no-store, must-revalidate, max-age=0"
+            )
             response.headers["Pragma"] = "no-cache"
             response.headers["Expires"] = "0"
         return response

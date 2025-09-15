@@ -6,7 +6,7 @@ class LocalServerConfig(BaseModel):
 
     session_api_key: str | None = Field(
         default=None,
-        description="The session api key used to authenticate all incoming requests. None implies the server will be unsecured"
+        description="The session api key used to authenticate all incoming requests. None implies the server will be unsecured",
     )
     local_conversation_service: str = Field(
         default="openhands_server.local_conversation.default_local_conversation_service.DefaultLocalConversationService",

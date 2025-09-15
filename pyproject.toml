@@ -17,82 +17,62 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
+  "aiosqlite>=0.19",
+  "alembic>=1.13",
+  "docker>=7.1,<8",
+  "fastapi>=0.104",
   "openhands-sdk @ git+https://github.com/All-Hands-AI/agent-sdk.git@b63f92733928c4994d0edc30abd6373d6ef03ef0#subdirectory=openhands/sdk",
   "openhands-tools @ git+https://github.com/All-Hands-AI/agent-sdk.git@b63f92733928c4994d0edc30abd6373d6ef03ef0#subdirectory=openhands/tools",
-  "fastapi>=0.104.0",
+  "pydantic>=2",
+  "sqlalchemy>=2",
   "uvicorn>=0.31.1",
-  "websockets>=12.0",
-  "pydantic>=2.0.0",
-  "sqlalchemy>=2.0.0",
-  "aiosqlite>=0.19.0",
-  "alembic>=1.13.0",
-  "docker (>=7.1.0,<8.0.0)",
+  "websockets>=12",
 ]
 
 optional-dependencies.dev = [
   "black>=23",
   "flake8>=6",
+  "httpx>=0.25",
   "isort>=5",
   "mypy>=1",
   "pre-commit>=3.7",
   "pytest>=7",
+  "pytest-asyncio>=0.21",
   "ruff>=0.11.8",
-  "httpx>=0.25.0",
-  "pytest-asyncio>=0.21.0",
 ]
 scripts.openhands-server = "openhands_server.main:main"
 
 [dependency-groups]
 dev = [
+  "httpx>=0.25",
   "pre-commit>=4.3",
+  "pycodestyle>=2.12",
   "pyinstaller>=6.15",
+  "pyright>=1.1.405",
   "pytest>=8.4.1",
-  "httpx>=0.25.0",
-  "pytest-asyncio>=0.21.0",
+  "pytest-asyncio>=0.21",
+  "ruff>=0.12.10",
 ]
+
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = [ "openhands_server" ]
 
-[tool.black]
-line-length = 88
-target-version = [ 'py312' ]
+# Ruff configuration
 
 [tool.ruff]
 target-version = "py312"
-
 line-length = 88
+
 format.indent-style = "space"
 format.quote-style = "double"
-format.line-ending = "auto"
-format.skip-magic-trailing-comma = false
-lint.select = [
-  "B",  # flake8-bugbear
-  "C4", # flake8-comprehensions
-  "E",  # pycodestyle errors
-  "F",  # pyflakes
-  "I",  # isort
-  "UP", # pyupgrade
-  "W",  # pycodestyle warnings
-]
-lint.ignore = [
-  "B008", # do not perform function calls in argument defaults
-  "C901", # too complex
-  "E501", # line too long, handled by black
-]
-
-[tool.isort]
-profile = "black"
-line_length = 88
-
-[tool.mypy]
-python_version = "3.12"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-ignore_missing_imports = true
+lint.select = [ "E", "F", "I" ]
+lint.isort.combine-as-imports = true
+lint.isort.force-single-line = false
+lint.isort.known-first-party = [ "openhands" ]
+lint.isort.lines-after-imports = 2
 
 [tool.uv.sources]
 openhands-sdk = { git = "https://github.com/All-Hands-AI/agent-sdk.git", subdirectory = "openhands/sdk", rev = "b63f92733928c4994d0edc30abd6373d6ef03ef0" }

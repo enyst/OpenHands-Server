@@ -1,6 +1,7 @@
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import Enum
 from uuid import UUID
+
 from pydantic import BaseModel, Field, SecretStr
 
 from openhands_server.utils.date_utils import utc_now

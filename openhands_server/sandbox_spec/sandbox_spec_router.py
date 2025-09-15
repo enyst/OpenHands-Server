@@ -2,7 +2,8 @@
 
 from typing import Annotated
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from fastapi import APIRouter, HTTPException, Query, status
 
 from openhands_server.sandbox_spec.sandbox_spec_models import (
     SandboxSpecInfo,
@@ -12,6 +13,7 @@ from openhands_server.sandbox_spec.sandbox_spec_service import (
     SandboxSpecService,
     get_default_sandbox_spec_service,
 )
+
 
 router = APIRouter(prefix="/runtime-images")
 sandbox_spec_service: SandboxSpecService = get_default_sandbox_spec_service()

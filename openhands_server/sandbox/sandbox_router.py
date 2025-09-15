@@ -2,6 +2,7 @@
 
 from typing import Annotated
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from openhands_server.sandbox.sandbox_models import SandboxInfo, SandboxPage
@@ -13,6 +14,7 @@ from openhands_server.sandbox_spec.sandbox_spec_router import sandbox_spec_servi
 from openhands_server.user.user_context import UserContext
 from openhands_server.user.user_dependencies import get_user_context, get_user_id
 from openhands_server.utils.success import Success
+
 
 router = APIRouter(prefix="/sandbox-containers")
 sandbox_service: SandboxService = get_default_sandbox_service()

@@ -3,7 +3,6 @@ from uuid import UUID
 
 from openhands.sdk import Message
 from openhands.sdk.utils.async_utils import AsyncConversationCallback
-
 from openhands_server.event.read_only_event_context import ReadOnlyEventContext
 
 
