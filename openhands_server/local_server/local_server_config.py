@@ -9,7 +9,7 @@ class LocalServerConfig(BaseModel):
     )
     local_conversation_service: str = Field(
         default="openhands_server.local_conversation.default_local_conversation_service.DefaultLocalConversationService",
-        description="THe type of conversation service to use",
+        description="The type of conversation service to use",
     )
     allow_cors_origins: set[str] = Field(
         default_factory=set,

@@ -1,5 +1,7 @@
 # OpenHands Server
 
+As of 2025-08-15 this is a work in progress and subject to rapid change.
+
 A REST/WebSocket interface for OpenHands AI Agent. This server provides HTTP and WebSocket endpoints to interact with the OpenHands agent programmatically.
 
 ## Quickstart
