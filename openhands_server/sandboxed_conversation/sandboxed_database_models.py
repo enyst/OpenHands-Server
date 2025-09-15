@@ -1,16 +1,17 @@
 
 import uuid
 from sqlalchemy import JSON, Column, DateTime, Float, Integer, String, UUID
-from sqlalchemy.orm import DeclarativeBase
 
+from openhands_server.database import Base
 from openhands_server.utils.date_utils import utc_now
 
 
-
-class StoredConversationMetricsSnapshot(DeclarativeBase):
+class StoredConversationMetricsSnapshot(Base):
     """
     StoredConversationMetrics - see openhands.sdk.llm.utils.metrics.MetricsSnapshot
     """
+    __tablename__ = 'sandboxed_conversation_metrics_snapshot'
+    
     id = Column(Integer, primary_key=True, autoincrement=True)
     conversation_id = Column(UUID, index=True)
     model_name = Column(String)
@@ -27,7 +28,7 @@ class StoredConversationMetricsSnapshot(DeclarativeBase):
     per_turn_token = Column(Integer, default=0)
 
 
-class StoredSandboxedConversationInfo(DeclarativeBase):
+class StoredSandboxedConversationInfo(Base):
     __tablename__ = 'sandboxed_conversation_info'
     id = Column(Integer, primary_key=True, autoincrement=True)
     conversation_id = Column(UUID, unique=True, default=uuid.uuid4)

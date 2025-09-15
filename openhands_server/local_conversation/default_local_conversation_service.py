@@ -113,6 +113,7 @@ class DefaultLocalConversationService(LocalConversationService):
                 working_dir=self.workspace_path / id.hex,
             )
         self._conversations = conversations
+        return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         conversations = self._conversations

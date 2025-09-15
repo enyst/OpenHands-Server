@@ -24,6 +24,7 @@ dependencies = [
   "websockets>=12.0",
   "pydantic>=2.0.0",
   "sqlalchemy>=2.0.0",
+  "aiosqlite>=0.19.0",
   "alembic>=1.13.0",
   "docker (>=7.1.0,<8.0.0)",
 ]
@@ -66,6 +67,7 @@ uvicorn = ">=0.31.1"
 websockets = ">=12.0"
 pydantic = ">=2.0.0"
 sqlalchemy = ">=2.0.0"
+aiosqlite = ">=0.19.0"
 alembic = ">=1.13.0"
 openhands-sdk = { git = "https://github.com/All-Hands-AI/agent-sdk.git", rev = "b63f92733928c4994d0edc30abd6373d6ef03ef0", subdirectory = "openhands/sdk" }
 openhands-tools = { git = "https://github.com/All-Hands-AI/agent-sdk.git", rev = "b63f92733928c4994d0edc30abd6373d6ef03ef0", subdirectory = "openhands/tools" }

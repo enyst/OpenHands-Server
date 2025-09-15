@@ -41,6 +41,7 @@ class SandboxedConversationService(ABC):
 
     async def __aenter__(self):
         """Start using this sandboxed conversation service"""
+        return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         """Stop using this sandboxed conversation service"""

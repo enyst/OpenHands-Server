@@ -1,13 +1,16 @@
 from typing import Optional
 from uuid import UUID
 from pydantic import Field
-from sqlalchemy import Column, Float, Integer, String
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import Column, Float, Integer, String, UUID as SQLAlchemyUUID
+
+from openhands_server.database import Base
 
 
-class StoredConversationMetricsSnapshot(DeclarativeBase):
+class StoredConversationMetricsSnapshot(Base):
     """StoredConversationMetrics - see openhands.sdk.llm.utils.metrics.MetricsSnapshot"""
-    conversation_id = Column(UUID, primary_key=True)
+    __tablename__ = 'local_conversation_metrics_snapshot'
+    
+    conversation_id = Column(SQLAlchemyUUID, primary_key=True)
     model_name = Column(String)
     accumulated_cost = Column(Float, default=0)
     max_budget_per_task = Column(Float, default=0)

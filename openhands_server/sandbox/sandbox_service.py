@@ -50,6 +50,7 @@ class SandboxService(ABC):
 
     async def __aenter__(self):
         """Start using this sandbox service"""
+        return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         """Stop using this sandbox service"""
