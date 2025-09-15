@@ -56,7 +56,8 @@ async def get_sandbox(id: UUID, user_id: UUID = Depends(get_user_id)) -> Sandbox
 
 @router.get("/")
 async def batch_get_sandboxes(
-    ids: list[UUID], user_id: UUID = Depends(get_user_id)
+    ids: Annotated[list[UUID], Query()],
+    user_id: UUID = Depends(get_user_id),
 ) -> list[SandboxInfo | None]:
     """Get a batch of sandboxes given their ids, returning null for any missing sandbox."""
     assert len(ids) < 100

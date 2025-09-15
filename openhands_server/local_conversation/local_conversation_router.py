@@ -53,7 +53,7 @@ async def get_local_conversation(id: UUID) -> LocalConversationInfo:
 
 @router.get("/")
 async def batch_get_local_conversations(
-    ids: list[UUID],
+    ids: Annotated[list[UUID], Query()],
 ) -> list[LocalConversationInfo | None]:
     """Get a batch of local conversations given their ids, returning null for any missing spec."""
     assert len(ids) < 100

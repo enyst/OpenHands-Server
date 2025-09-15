@@ -62,7 +62,7 @@ async def get_sandboxed_conversation(
 
 @router.get("/")
 async def batch_get_sandboxed_conversations(
-    ids: list[UUID], user_id: Annotated[UUID, Depends(get_user_id)]
+    ids: Annotated[list[UUID], Query()], user_id: Annotated[UUID, Depends(get_user_id)]
 ) -> list[SandboxedConversationInfo | None]:
     """Get a batch of sandboxed conversations given their ids, returning null for any missing spec."""
     assert len(ids) < 100
