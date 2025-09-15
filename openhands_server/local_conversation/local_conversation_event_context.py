@@ -78,9 +78,11 @@ class LocalConversationEventContext(EventContext):
     async def send_message(self, message: Message):
         async with self._lock:
             loop = asyncio.get_running_loop()
-            asyncio.create_task(
-                loop.run_in_executor(None, self._conversation.send_message, message)
-            )
+            loop.run_in_executor(None, self._conversation.send_message, message)
+            with self._conversation.state as state:
+                if state.agent_status != AgentExecutionStatus.RUNNING:
+                    loop.run_in_executor(None, self._conversation.run, message)
+
 
     async def subscribe_to_events(self, callback: AsyncConversationCallback) -> UUID:
         return self._pub_sub.subscribe(callback)

@@ -18,7 +18,7 @@ class LocalServerConfig(BaseModel):
         description="Set of CORS origins permitted by this server. (Default empty set only accepts anything from localhost)",
     )
     conversations_path: Path = Field(
-        default=Path("workspace/projects"),
+        default=Path("workspace/project"),
         description="The location of the workspace directory where files the agent reads from / writes to in the local file system"
     )
     workspace_path: Path = Field(

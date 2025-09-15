@@ -40,5 +40,18 @@ class TaskTrackerToolInfo(ToolInfo):
     def create_tool(self):
         return TaskTrackerTool.create(save_dir=self.save_dir)
 
+{
+    type: ""
+    ...
+}
+
+{
+    type: ""
+    instance: {
+        ...
+    }
+}
+
+
 
 ToolInfoType = Annotated[Union[BashToolInfo, FileEditorToolInfo, TaskTrackerToolInfo], Field(discriminator="type")]

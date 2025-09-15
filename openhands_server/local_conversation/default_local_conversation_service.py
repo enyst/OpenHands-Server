@@ -34,7 +34,7 @@ class DefaultLocalConversationService(LocalConversationService):
     """
 
     conversations_path: Path = field(default=Path("workspace/conversations"))
-    workspace_path: Path = field(default=Path("workspace/projects"))
+    workspace_path: Path = field(default=Path("workspace/project"))
     _conversations: dict[UUID, LocalConversationEventContext] | None = field(
         default=None, init=False
     )
