@@ -9,7 +9,6 @@ from openhands.sdk import (
     Conversation,
     EventBase,
     LocalFileStore,
-    Message,
     create_mcp_tools,
 )
 from openhands.sdk.conversation.state import AgentExecutionStatus
@@ -20,6 +19,7 @@ from openhands.sdk.utils.async_utils import (
 from openhands_server.sdk_server.models import (
     ConfirmationResponseRequest,
     EventPage,
+    SendMessageRequest,
     StoredConversation,
 )
 from openhands_server.sdk_server.pub_sub import PubSub
@@ -96,12 +96,18 @@ class EventService:
             results.append(result)
         return results
 
-    async def send_message(self, message: Message):
+    async def send_message(self, request: SendMessageRequest):
         if not self._conversation:
             raise ValueError("inactive_service")
+        message = request.create_message()
         async with self._lock:
             loop = asyncio.get_running_loop()
-            loop.run_in_executor(None, self._conversation.send_message, message)
+            future = loop.run_in_executor(
+                None, self._conversation.send_message, message
+            )
+            if request.run:
+                await future
+                loop.run_in_executor(None, self._conversation.run)
 
     async def subscribe_to_events(self, callback: AsyncConversationCallback) -> UUID:
         return self._pub_sub.subscribe(callback)
@@ -138,7 +144,6 @@ class EventService:
             # Set confirmation mode if enabled
             conversation.set_confirmation_mode(self.stored.confirmation_mode)
             self._conversation = conversation
-            await self.run()
 
     async def run(self):
         """Run the conversation asynchronously."""

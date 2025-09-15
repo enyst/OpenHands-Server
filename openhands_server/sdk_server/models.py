@@ -9,12 +9,31 @@ from openhands.sdk import (
     AgentContext,
     EventBase,
     ImageContent,
+    Message,
     TextContent,
     ToolSpec,
 )
 from openhands.sdk.conversation.state import AgentExecutionStatus
 from openhands.sdk.llm.utils.metrics import MetricsSnapshot
 from openhands_server.sdk_server.utils import utc_now
+
+
+class SendMessageRequest(BaseModel):
+    """Payload to send a message to the agent.
+
+    This is a simplified version of openhands.sdk.Message.
+    """
+
+    role: Literal["user", "system", "assistant", "tool"] = "user"
+    content: list[TextContent | ImageContent] = Field(default_factory=list)
+    run: bool = Field(
+        default=True,
+        description="If true, immediately run the agent after sending the message.",
+    )
+
+    def create_message(self) -> Message:
+        message = Message(role=self.role, content=self.content)
+        return message
 
 
 class StartConversationRequest(BaseModel):
@@ -90,6 +109,9 @@ class StartConversationRequest(BaseModel):
         description="If true, the agent will enter confirmation mode, "
         "requiring user approval for actions.",
     )
+    initial_message: SendMessageRequest | None = Field(
+        default=None, description="Initial message to pass to the LLM"
+    )
 
 
 class StoredConversation(StartConversationRequest):
@@ -115,20 +137,6 @@ class ConversationPage(BaseModel):
 class ConversationResponse(BaseModel):
     conversation_id: str
     state: AgentExecutionStatus
-
-
-class SendMessageRequest(BaseModel):
-    """Payload to send a message to the agent.
-
-    This is a simplified version of openhands.sdk.Message.
-    """
-
-    role: Literal["user", "system", "assistant", "tool"] = "user"
-    content: list[TextContent | ImageContent] = Field(default_factory=list)
-    run: bool = Field(
-        default=True,
-        description="If true, immediately run the agent after sending the message.",
-    )
 
 
 class ConfirmationResponseRequest(BaseModel):

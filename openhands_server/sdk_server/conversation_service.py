@@ -101,6 +101,12 @@ class ConversationService:
         await event_service.subscribe_to_events(_EventListener(service=event_service))
         self._event_services[event_service_id] = event_service
         await event_service.start()
+        initial_message = request.initial_message
+        if initial_message:
+            await event_service.send_message(initial_message)
+            if initial_message.run:
+                await event_service.run()
+
         status = await event_service.get_status()
         return ConversationInfo(**event_service.stored.model_dump(), status=status)
 
