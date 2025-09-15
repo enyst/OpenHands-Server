@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from uuid import UUID
-from typing import Dict
 
 from openhands.sdk.event import Event
 from openhands.sdk.logger import get_logger

@@ -43,7 +43,10 @@ async def search_local_conversation_events(
     conversation_id: UUID,
     page_id: Annotated[
         str | None,
-        Query(title="Optional next_page_id from the previously returned page", default=None),
+        Query(
+            title="Optional next_page_id from the previously returned page",
+            default=None,
+        ),
     ] = None,
     limit: Annotated[
         int,
