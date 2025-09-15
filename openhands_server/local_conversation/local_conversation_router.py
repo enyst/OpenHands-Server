@@ -34,7 +34,7 @@ async def search_local_conversations(
     limit: Annotated[
         int,
         Query(
-            title="The max number of results in the page", gt=0, lte=100, default=100
+            title="The max number of results in the page", gt=0, lte=100
         ),
     ] = 100,
 ) -> LocalConversationPage:

@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-
+from typing import AsyncIterator
 from fastapi import FastAPI
 
 from openhands_server.local_conversation.local_conversation_event_router import (
@@ -22,8 +22,9 @@ from openhands_server.utils.middleware import (
 
 
 @asynccontextmanager
-async def api_lifespan():
-    with get_default_local_conversation_service():
+async def api_lifespan(api: FastAPI) -> AsyncIterator[None]:
+    service = get_default_local_conversation_service()
+    async with service:
         yield
 
 
