@@ -50,47 +50,11 @@ dev = [
   "pytest-asyncio>=0.21.0",
 ]
 
-[tool.poetry]
-name = "openhands-server"
-version = "0.1.0"
-description = "OpenHands Server - REST/WebSocket interface for OpenHands AI Agent"
-authors = [ "OpenHands Team <contact@all-hands.dev>" ]
-license = "MIT"
-readme = "README.md"
-packages = [ { include = "openhands_server" } ]
-
-[tool.poetry.dependencies]
-python = "^3.12"
-fastapi = ">=0.104.0"
-uvicorn = ">=0.31.1"
-websockets = ">=12.0"
-pydantic = ">=2.0.0"
-sqlalchemy = ">=2.0.0"
-alembic = ">=1.13.0"
-openhands-sdk = { git = "https://github.com/All-Hands-AI/agent-sdk.git", rev = "b63f92733928c4994d0edc30abd6373d6ef03ef0", subdirectory = "openhands/sdk" }
-openhands-tools = { git = "https://github.com/All-Hands-AI/agent-sdk.git", rev = "b63f92733928c4994d0edc30abd6373d6ef03ef0", subdirectory = "openhands/tools" }
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.0.0"
-black = "^23.0.0"
-isort = "^5.0.0"
-flake8 = "^6.0.0"
-mypy = "^1.0.0"
-pre-commit = "^3.7.0"
-ruff = "^0.11.8"
-httpx = ">=0.28.1"
-pytest-asyncio = "^0.21.0"
-
-[tool.poetry.scripts]
-openhands-server = "openhands_server.main:main"
-
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = [ "openhands_server" ]
-
-# Keep Poetry configuration for compatibility
 
 [tool.black]
 line-length = 88
@@ -132,3 +96,4 @@ ignore_missing_imports = true
 
 [tool.uv.sources]
 openhands-sdk = { git = "https://github.com/All-Hands-AI/agent-sdk.git", subdirectory = "openhands/sdk", rev = "b63f92733928c4994d0edc30abd6373d6ef03ef0" }
+openhands-tools = { git = "https://github.com/All-Hands-AI/agent-sdk.git", subdirectory = "openhands/tools", rev = "b63f92733928c4994d0edc30abd6373d6ef03ef0" }
