@@ -135,7 +135,7 @@ class DefaultLocalConversationService(LocalConversationService):
         if not conversation:
             return False
         
-        await conversation.start()
+        await conversation.run()
         return True
 
     async def respond_to_confirmation(
@@ -150,7 +150,7 @@ class DefaultLocalConversationService(LocalConversationService):
         # This would need to be implemented in the conversation/agent SDK
         # For now, we'll just resume if accepted, pause if rejected
         if request.accept:
-            await conversation.start()
+            await conversation.run()
         else:
             await conversation.pause()
         
