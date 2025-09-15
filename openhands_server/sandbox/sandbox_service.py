@@ -1,5 +1,3 @@
-
-
 from abc import ABC, abstractmethod
 from uuid import UUID
 
@@ -14,7 +12,9 @@ class SandboxService(ABC):
     """
 
     @abstractmethod
-    async def search_sandboxes(self, user_id: UUID | None = None, page_id: str | None = None, limit: int = 100) -> SandboxPage:
+    async def search_sandboxes(
+        self, user_id: UUID | None = None, page_id: str | None = None, limit: int = 100
+    ) -> SandboxPage:
         """Search for sandboxes"""
 
     @abstractmethod
@@ -31,8 +31,10 @@ class SandboxService(ABC):
         return results
 
     @abstractmethod
-    async def start_sandbox(self, user_context: UserContext, sandbox_spec_id: str) -> SandboxInfo:
-        """Begin the process of starting a sandbox. Return the info on the new sandbox """
+    async def start_sandbox(
+        self, user_context: UserContext, sandbox_spec_id: str
+    ) -> SandboxInfo:
+        """Begin the process of starting a sandbox. Return the info on the new sandbox"""
 
     @abstractmethod
     async def resume_sandbox(self, id: UUID) -> bool:
@@ -58,7 +60,7 @@ class SandboxService(ABC):
     @classmethod
     @abstractmethod
     def get_instance(cls) -> "SandboxService":
-        """ Get an instance of sandbox service """
+        """Get an instance of sandbox service"""
 
 
 _sandbox_service = None
@@ -68,5 +70,8 @@ def get_default_sandbox_service():
     global _sandbox_service
     if _sandbox_service:
         return _sandbox_service
-    _sandbox_service = get_impl(SandboxService, "openhands_server.sandbox.docker_sandbox_service.DockerSandboxService")()
+    _sandbox_service = get_impl(
+        SandboxService,
+        "openhands_server.sandbox.docker_sandbox_service.DockerSandboxService",
+    )()
     return _sandbox_service

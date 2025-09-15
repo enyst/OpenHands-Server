@@ -1,8 +1,5 @@
-
-
 from datetime import datetime
 from enum import Enum
-from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -15,12 +12,15 @@ class SandboxSpecStatus(Enum):
 
 
 class SandboxSpecInfo(BaseModel):
-    """ A runtime image is a template for creating a runtime, analogous to a docker image """
+    """A runtime image is a template for creating a runtime, analogous to a docker image"""
+
     id: str
     command: str
     created_at: datetime
-    initial_env: dict[str, str] = Field(default_factory=dict, description="Initial Environment Variables")
-    working_dir: str = '/openhands/code'
+    initial_env: dict[str, str] = Field(
+        default_factory=dict, description="Initial Environment Variables"
+    )
+    working_dir: str = "/openhands/code"
 
 
 class SandboxSpecInfoPage(BaseModel):

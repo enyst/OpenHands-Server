@@ -1,24 +1,29 @@
-
-
 import asyncio
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
 from uuid import UUID
+
 from openhands.sdk import Conversation, EventBase, LocalFileStore, Message
-from openhands.sdk.utils.async_utils import AsyncConversationCallback, AsyncCallbackWrapper
-from openhands_server.event.event_models import EventPage
+from openhands.sdk.utils.async_utils import (
+    AsyncCallbackWrapper,
+    AsyncConversationCallback,
+)
 from openhands_server.event.event_context import EventContext
-from openhands_server.local_conversation.local_conversation_models import ConversationStatus, StoredLocalConversation
+from openhands_server.event.event_models import EventPage
+from openhands_server.local_conversation.local_conversation_models import (
+    ConversationStatus,
+    StoredLocalConversation,
+)
 from openhands_server.utils.date_utils import utc_now
 from openhands_server.utils.pub_sub import PubSub
 
 
 @dataclass
 class LocalConversationEventContext(EventContext):
-    """ 
+    """
     Event service for a conversation running locally. Use an event manager to start the service before use
     """
+
     stored: StoredLocalConversation
     file_store_path: Path
     working_dir: str
@@ -38,7 +43,14 @@ class LocalConversationEventContext(EventContext):
     async def get_event(self, event_id: str) -> EventBase | None:
         # TODO: It would be better to be able to get the event by its id directly here!
         # Is there an API for this?
-        event = next((event for event in self._conversation.state.events if event.id == event_id), None)
+        event = next(
+            (
+                event
+                for event in self._conversation.state.events
+                if event.id == event_id
+            ),
+            None,
+        )
         return event
 
     async def search_events(self, page_id: str = None, limit: int = 100) -> EventPage:
@@ -58,22 +70,24 @@ class LocalConversationEventContext(EventContext):
                     if limit <= 0:
                         return EventPage(items=items, next_page_id=event.id)
                     limit -= 1
-                
+
                     items.append(event)
-                    
+
         return EventPage(items=items)
 
     async def send_message(self, message: Message):
         async with self._lock:
             loop = asyncio.get_running_loop()
-            asyncio.create_task(loop.run_in_executor(None, self._conversation.send_message, message))
+            asyncio.create_task(
+                loop.run_in_executor(None, self._conversation.send_message, message)
+            )
 
     async def subscribe_to_events(self, callback: AsyncConversationCallback) -> UUID:
         return self._pub_sub.subscribe(callback)
-    
+
     async def unsubscribe_from_events(self, callback_id: UUID) -> bool:
         return self._pub_sub.unsubscribe(callback_id)
-    
+
     async def start(self):
         async with self._lock:
             if self._conversation:
@@ -81,18 +95,22 @@ class LocalConversationEventContext(EventContext):
                     # Agent has finished
                     if state.agent_finished:
                         return
-                    
+
                     # Agent is already running
-                    if not state.agent_paused and not state.agent_waiting_for_confirmation:
+                    if (
+                        not state.agent_paused
+                        and not state.agent_waiting_for_confirmation
+                    ):
                         return
 
                 self._conversation.run()
-            
+
             agent = self.stored.agent.create_agent(self.working_dir)
             conversation = Conversation(
-                agent=agent, 
+                agent=agent,
                 callbacks=[AsyncCallbackWrapper(self._pub_sub)],
-                persist_filestore=LocalFileStore(self.file_store_path / "events"))
+                persist_filestore=LocalFileStore(self.file_store_path / "events"),
+            )
             self._conversation = conversation
             loop = asyncio.get_running_loop()
             asyncio.create_task(loop.run_in_executor(None, conversation.run))
@@ -101,13 +119,17 @@ class LocalConversationEventContext(EventContext):
         async with self._lock:
             if self._conversation:
                 loop = asyncio.get_running_loop()
-                asyncio.create_task(loop.run_in_executor(None, self._conversation.pause))
+                asyncio.create_task(
+                    loop.run_in_executor(None, self._conversation.pause)
+                )
 
     async def close(self):
-         async with self._lock:
+        async with self._lock:
             if self._conversation:
                 loop = asyncio.get_running_loop()
-                asyncio.create_task(loop.run_in_executor(None, self._conversation.close))
+                asyncio.create_task(
+                    loop.run_in_executor(None, self._conversation.close)
+                )
 
     async def get_status(self) -> ConversationStatus:
         async with self._lock:
@@ -123,7 +145,7 @@ class LocalConversationEventContext(EventContext):
     async def __aenter__(self):
         await self.start()
         return self
-    
+
     async def __aexit__(self, exc_type, exc_value, traceback):
         self.save_meta()
         await self.close()

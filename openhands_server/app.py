@@ -3,7 +3,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import conversation, runtime, settings, users
+from .routers import conversation, runtime
+
 
 app = FastAPI(
     title="OpenHands Server",
@@ -24,6 +25,7 @@ app.add_middleware(
 app.include_router(conversation.router)
 app.include_router(runtime.router)
 
+
 @app.get("/")
 async def root():
     """Root endpoint."""
@@ -31,5 +33,5 @@ async def root():
         "message": "Welcome to OpenHands Server",
         "version": "0.1.0",
         "docs": "/docs",
-        "redoc": "/redoc"
+        "redoc": "/redoc",
     }

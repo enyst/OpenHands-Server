@@ -1,11 +1,11 @@
-
-
 from abc import ABC, abstractmethod
-from tkinter import EventType
 from uuid import UUID
 
 from openhands_server.event.read_only_event_context import ReadOnlyEventContext
-from openhands_server.sandboxed_conversation.sandboxed_conversation_models import SandboxedConversationInfo, SandboxedConversationPage
+from openhands_server.sandboxed_conversation.sandboxed_conversation_models import (
+    SandboxedConversationInfo,
+    SandboxedConversationPage,
+)
 from openhands_server.utils.import_utils import get_impl
 
 
@@ -15,15 +15,21 @@ class SandboxedConversationService(ABC):
     """
 
     @abstractmethod
-    async def search_sandboxed_conversations(self, user_id: UUID | None = None, page_id: str | None = None, limit: int = 100) -> SandboxedConversationPage:
+    async def search_sandboxed_conversations(
+        self, user_id: UUID | None = None, page_id: str | None = None, limit: int = 100
+    ) -> SandboxedConversationPage:
         """Search for sandboxed conversations"""
 
     @abstractmethod
-    async def get_sandboxed_conversation(self, user_id: UUID, conversation_id: UUID) -> SandboxedConversationInfo | None:
+    async def get_sandboxed_conversation(
+        self, user_id: UUID, conversation_id: UUID
+    ) -> SandboxedConversationInfo | None:
         """Get a single sandboxed conversation info. Return None if the conversation was not found."""
 
     @abstractmethod
-    async def batch_get_sandboxed_conversations(self, user_id: UUID, conversation_ids: list[UUID]) -> list[SandboxedConversationInfo | None]:
+    async def batch_get_sandboxed_conversations(
+        self, user_id: UUID, conversation_ids: list[UUID]
+    ) -> list[SandboxedConversationInfo | None]:
         """Get a batch of sandboxed conversations. Return None for any conversation which was not found."""
         results = []
         for conversation_id in conversation_ids:
@@ -35,7 +41,7 @@ class SandboxedConversationService(ABC):
 
     @abstractmethod
     async def get_event_context(self, id: UUID) -> ReadOnlyEventContext | None:
-        """ Get an event service for a conversation. """
+        """Get an event service for a conversation."""
 
     # Lifecycle methods
 
@@ -49,7 +55,7 @@ class SandboxedConversationService(ABC):
     @classmethod
     @abstractmethod
     def get_instance(cls) -> "SandboxedConversationService":
-        """ Get an instance of sandboxed conversation service """
+        """Get an instance of sandboxed conversation service"""
 
 
 _sandboxed_conversation_service: SandboxedConversationService = None
