@@ -36,7 +36,6 @@ class EventService:
     stored: StoredConversation
     file_store_path: Path
     working_dir: Path
-    _lock: asyncio.Lock = field(default_factory=asyncio.Lock, init=False)
     _conversation: Conversation | None = field(default=None, init=False)
     _pub_sub: PubSub = field(default_factory=PubSub, init=False)
 
@@ -52,14 +51,13 @@ class EventService:
     async def get_event(self, event_id: str) -> EventBase | None:
         if not self._conversation:
             raise ValueError("inactive_service")
-        async with self._lock:
-            with self._conversation.state as state:
-                # TODO: It would be nice if the agent sdk had a method for
-                #       getting events by id
-                event = next(
-                    (event for event in state.events if event.id == event_id), None
-                )
-                return event
+        with self._conversation.state as state:
+            # TODO: It would be nice if the agent sdk had a method for
+            #       getting events by id
+            event = next(
+                (event for event in state.events if event.id == event_id), None
+            )
+            return event
 
     async def search_events(
         self, page_id: str | None = None, limit: int = 100
@@ -68,23 +66,22 @@ class EventService:
             raise ValueError("inactive_service")
 
         items = []
-        async with self._lock:
-            with self._conversation.state as state:
-                for event in state.events:
-                    # If we have reached the start of the page
-                    if event.id == page_id:
-                        page_id = None
+        with self._conversation.state as state:
+            for event in state.events:
+                # If we have reached the start of the page
+                if event.id == page_id:
+                    page_id = None
 
-                    # Skip pass entries before the first item...
-                    if page_id:
-                        continue
+                # Skip pass entries before the first item...
+                if page_id:
+                    continue
 
-                    # If we have reached the end of the page, return it
-                    if limit <= 0:
-                        return EventPage(items=items, next_page_id=event.id)
-                    limit -= 1
+                # If we have reached the end of the page, return it
+                if limit <= 0:
+                    return EventPage(items=items, next_page_id=event.id)
+                limit -= 1
 
-                    items.append(event)
+                items.append(event)
 
         return EventPage(items=items)
 
@@ -100,14 +97,11 @@ class EventService:
         if not self._conversation:
             raise ValueError("inactive_service")
         message = request.create_message()
-        async with self._lock:
-            loop = asyncio.get_running_loop()
-            future = loop.run_in_executor(
-                None, self._conversation.send_message, message
-            )
-            if request.run:
-                await future
-                loop.run_in_executor(None, self._conversation.run)
+        loop = asyncio.get_running_loop()
+        future = loop.run_in_executor(None, self._conversation.send_message, message)
+        if request.run:
+            await future
+            loop.run_in_executor(None, self._conversation.run)
 
     async def subscribe_to_events(self, callback: AsyncConversationCallback) -> UUID:
         return self._pub_sub.subscribe(callback)
@@ -116,42 +110,40 @@ class EventService:
         return self._pub_sub.unsubscribe(callback_id)
 
     async def start(self):
-        async with self._lock:
-            llm = self.stored.llm
-            tools = []
+        llm = self.stored.llm
+        tools = []
 
-            # Create tools from tool specs
-            for tool_spec in self.stored.tools:
-                if tool_spec.name not in openhands.tools.__dict__:
-                    continue
-                tool_class = openhands.tools.__dict__[tool_spec.name]
-                tools.append(tool_class.create(**tool_spec.params))
+        # Create tools from tool specs
+        for tool_spec in self.stored.tools:
+            if tool_spec.name not in openhands.tools.__dict__:
+                continue
+            tool_class = openhands.tools.__dict__[tool_spec.name]
+            tools.append(tool_class.create(**tool_spec.params))
 
-            # Add MCP tools if configured
-            if self.stored.mcp_config:
-                mcp_tools = create_mcp_tools(self.stored.mcp_config, timeout=30)
-                tools.extend(mcp_tools)
+        # Add MCP tools if configured
+        if self.stored.mcp_config:
+            mcp_tools = create_mcp_tools(self.stored.mcp_config, timeout=30)
+            tools.extend(mcp_tools)
 
-            agent = Agent(llm=llm, tools=tools, agent_context=self.stored.agent_context)
-            conversation = Conversation(
-                agent=agent,
-                callbacks=[
-                    AsyncCallbackWrapper(self._pub_sub, loop=asyncio.get_running_loop())
-                ],
-                persist_filestore=LocalFileStore(str(self.file_store_path / "events")),
-            )
+        agent = Agent(llm=llm, tools=tools, agent_context=self.stored.agent_context)
+        conversation = Conversation(
+            agent=agent,
+            callbacks=[
+                AsyncCallbackWrapper(self._pub_sub, loop=asyncio.get_running_loop())
+            ],
+            persist_filestore=LocalFileStore(str(self.file_store_path / "events")),
+        )
 
-            # Set confirmation mode if enabled
-            conversation.set_confirmation_mode(self.stored.confirmation_mode)
-            self._conversation = conversation
+        # Set confirmation mode if enabled
+        conversation.set_confirmation_mode(self.stored.confirmation_mode)
+        self._conversation = conversation
 
     async def run(self):
         """Run the conversation asynchronously."""
         if not self._conversation:
             raise ValueError("inactive_service")
-        async with self._lock:
-            loop = asyncio.get_running_loop()
-            loop.run_in_executor(None, self._conversation.run)
+        loop = asyncio.get_running_loop()
+        loop.run_in_executor(None, self._conversation.run)
 
     async def respond_to_confirmation(self, request: ConfirmationResponseRequest):
         if request.accept:
@@ -160,23 +152,19 @@ class EventService:
             await self.pause()
 
     async def pause(self):
-        async with self._lock:
-            if self._conversation:
-                loop = asyncio.get_running_loop()
-                loop.run_in_executor(None, self._conversation.pause)
+        if self._conversation:
+            loop = asyncio.get_running_loop()
+            loop.run_in_executor(None, self._conversation.pause)
 
     async def close(self):
-        async with self._lock:
-            if self._conversation:
-                loop = asyncio.get_running_loop()
-                loop.run_in_executor(None, self._conversation.close)
+        if self._conversation:
+            loop = asyncio.get_running_loop()
+            loop.run_in_executor(None, self._conversation.close)
 
     async def get_status(self) -> AgentExecutionStatus:
-        async with self._lock:
-            if not self._conversation:
-                return AgentExecutionStatus.ERROR
-            with self._conversation.state as state:
-                return state.agent_status
+        if not self._conversation:
+            return AgentExecutionStatus.ERROR
+        return self._conversation.state.agent_status
 
     async def __aenter__(self):
         await self.start()
