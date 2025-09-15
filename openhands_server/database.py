@@ -9,6 +9,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 class Base(DeclarativeBase):
     """Base class for all database models."""
+
     pass
 
 
@@ -33,10 +34,10 @@ AsyncSessionLocal = async_sessionmaker(
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency function that yields database sessions.
-    
+
     This function creates a new database session for each request
     and ensures it's properly closed after use.
-    
+
     Yields:
         AsyncSession: An async SQLAlchemy session
     """
@@ -63,7 +64,7 @@ async def drop_tables() -> None:
 async def example_usage() -> None:
     """
     Example of how to use the async session maker.
-    
+
     This function demonstrates the proper way to use async sessions
     for database operations.
     """
@@ -73,7 +74,7 @@ async def example_usage() -> None:
         # result = await session.execute(select(SomeModel))
         # await session.commit()
         pass
-    
+
     # Method 2: Direct usage with context manager
     async with AsyncSessionLocal() as session:
         try:

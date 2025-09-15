@@ -1,5 +1,3 @@
-
-
 import asyncio
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -10,9 +8,18 @@ from pathlib import Path
 import shutil
 from uuid import UUID, uuid4
 
-from openhands_server.local_conversation.local_conversation_event_context import LocalConversationEventContext
-from openhands_server.local_conversation.local_conversation_models import LocalConversationInfo, LocalConversationPage, StartLocalConversationRequest, StoredLocalConversation
-from openhands_server.local_conversation.local_conversation_service import LocalConversationService
+from openhands_server.local_conversation.local_conversation_event_context import (
+    LocalConversationEventContext,
+)
+from openhands_server.local_conversation.local_conversation_models import (
+    LocalConversationInfo,
+    LocalConversationPage,
+    StartLocalConversationRequest,
+    StoredLocalConversation,
+)
+from openhands_server.local_conversation.local_conversation_service import (
+    LocalConversationService,
+)
 from openhands_server.event.event_context import EventContext
 from openhands_server.utils.date_utils import utc_now
 
@@ -22,14 +29,16 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class DefaultLocalConversationService(LocalConversationService):
-    """ 
+    """
     Conversation service which stores to a local file store. When the context starts
     all conversations are loaded into memory, and stored when it stops.
     """
 
     file_store_path: Path = field(default=Path("/workspace/conversations"))
     workspace_path: Path = field(default=Path("/workspace"))
-    _conversations: dict[UUID, LocalConversationEventContext] | None = field(default=None, init=False)
+    _conversations: dict[UUID, LocalConversationEventContext] | None = field(
+        default=None, init=False
+    )
 
     async def get_local_conversation(self, id: UUID) -> LocalConversationInfo:
         conversation = self._conversations.get(id)
@@ -37,11 +46,12 @@ class DefaultLocalConversationService(LocalConversationService):
             return None
         status = await conversation.get_status()
         return LocalConversationInfo(**conversation.stored.model_dump(), status=status)
-    
-    async def search_local_conversations(self, page_id: str | None = None, limit: int = 100) -> LocalConversationPage:
+
+    async def search_local_conversations(
+        self, page_id: str | None = None, limit: int = 100
+    ) -> LocalConversationPage:
         items = []
         for id, conversation in self._conversations.items():
-            
             # If we have reached the start of the page
             if id == page_id:
                 page_id = None
@@ -55,17 +65,21 @@ class DefaultLocalConversationService(LocalConversationService):
                 return LocalConversationPage(items=items, next_page_id=id.hex)
             limit -= 1
 
-            items.append(LocalConversationInfo(
-                **conversation.stored.model_dump(),
-                status=await conversation.get_status()
-            ))
+            items.append(
+                LocalConversationInfo(
+                    **conversation.stored.model_dump(),
+                    status=await conversation.get_status(),
+                )
+            )
         return LocalConversationPage(items=items)
 
     # Write Methods
 
-    async def start_local_conversation(self, request: StartLocalConversationRequest) -> LocalConversationInfo:
-        """ Start a local conversation and return its id. """
-        id = uuid4(),
+    async def start_local_conversation(
+        self, request: StartLocalConversationRequest
+    ) -> LocalConversationInfo:
+        """Start a local conversation and return its id."""
+        id = (uuid4(),)
         stored = StoredLocalConversation(id=id, **request.model_dump())
         conversation = LocalConversationEventContext(
             stored=stored,
@@ -119,11 +133,13 @@ class DefaultLocalConversationService(LocalConversationService):
         conversations = self._conversations
         self._conversations = None
         # This stops convesations and saves meta
-        await asyncio.gather(*[
-            conversation.__aexit__(exc_type, exc_value, traceback)
-            for conversation in conversations.values()
-        ])
-        
+        await asyncio.gather(
+            *[
+                conversation.__aexit__(exc_type, exc_value, traceback)
+                for conversation in conversations.values()
+            ]
+        )
+
     @classmethod
     def get_instance(cls) -> LocalConversationService:
         return DefaultLocalConversationService()

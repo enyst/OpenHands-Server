@@ -8,8 +8,9 @@ from openhands_server.database import Base
 
 class StoredConversationMetricsSnapshot(Base):
     """StoredConversationMetrics - see openhands.sdk.llm.utils.metrics.MetricsSnapshot"""
-    __tablename__ = 'local_conversation_metrics_snapshot'
-    
+
+    __tablename__ = "local_conversation_metrics_snapshot"
+
     conversation_id = Column(SQLAlchemyUUID, primary_key=True)
     model_name = Column(String)
     accumulated_cost = Column(Float, default=0)

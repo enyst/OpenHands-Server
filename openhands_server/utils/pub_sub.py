@@ -17,6 +17,7 @@ class PubSub:
     and provides methods to subscribe/unsubscribe callbacks. When invoked, it calls
     all registered callbacks with proper error handling.
     """
+
     _callbacks: dict[uuid.UUID, AsyncConversationCallback] = field(default_factory=dict)
 
     def subscribe(self, callback: AsyncConversationCallback) -> UUID:

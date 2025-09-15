@@ -1,0 +1,29 @@
+from pydantic import BaseModel, Field
+
+
+class LocalServerConfig(BaseModel):
+    """Immutable configuration for a server running in local mode. (Typically inside a sandbox)."""
+
+    session_api_key: str | None = Field(
+        description="The session api key used to authenticate all incoming requests. None implies the server will be unsecured"
+    )
+    local_conversation_service: str = Field(
+        default="openhands_server.local_conversation.default_local_conversation_service.DefaultLocalConversationService",
+        description="THe type of conversation service to use",
+    )
+    allow_cors_origins: set[str] = Field(
+        default_factory=set,
+        description="Set of CORS origins permitted by this server. (Default empty set only accepts anything from localhost)",
+    )
+    model_config = {"frozen": True}
+
+
+_default_local_server_config: LocalServerConfig | None = None
+
+
+def get_default_local_server_config():
+    """Get the default local server config shared across the server"""
+    global _default_local_server_config
+    if _default_local_server_config is None:
+        _default_local_server_config = LocalServerConfig()
+    return _default_local_server_config

@@ -1,4 +1,3 @@
-
 import secrets
 import socket
 from dataclasses import dataclass, field
@@ -18,42 +17,52 @@ from openhands_server.sandbox.sandbox_models import (
 from openhands_server.sandbox.sandbox_service import (
     SandboxService,
 )
-from openhands_server.sandbox_spec.docker_sandbox_spec_service import DockerSandboxSpecService
+from openhands_server.sandbox_spec.docker_sandbox_spec_service import (
+    DockerSandboxSpecService,
+)
 from openhands_server.sandbox_spec.sandbox_spec_service import (
     get_default_sandbox_spec_service,
 )
 from openhands_server.utils.date_utils import utc_now
 
+
 @dataclass
 class VolumeMount:
     host_path: str
     container_path: str
-    mode: str = 'rw'
+    mode: str = "rw"
 
 
 @dataclass
 class ExposedPort:
     """Exposed port. A free port will be found for this and an environment variable set"""
+
     name: str
     description: str
 
 
 @dataclass
 class DockerSandboxService(SandboxService):
-
     container_name_prefix: str = "openhands-runtime-"
     exposed_url_pattern: str = "http://localhost:{port}"
-    sandbox_spec_service: DockerSandboxSpecService = field(default_factory=DockerSandboxSpecService.get_instance)
+    sandbox_spec_service: DockerSandboxSpecService = field(
+        default_factory=DockerSandboxSpecService.get_instance
+    )
     mounts: list[VolumeMount] = field(default_factory=list)
-    exposed_port: list[ExposedPort] = field(default_factory=lambda: [
-        ExposedPort("APPLICATION_SERVER_PORT", 'The port on which the application server runs within the container')
-    ])
+    exposed_port: list[ExposedPort] = field(
+        default_factory=lambda: [
+            ExposedPort(
+                "APPLICATION_SERVER_PORT",
+                "The port on which the application server runs within the container",
+            )
+        ]
+    )
     _client: docker.DockerClient | None = field(default=None)
 
     def _find_unused_port(self) -> int:
         """Find an unused port on the host machine"""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('', 0))
+            s.bind(("", 0))
             s.listen(1)
             port = s.getsockname()[1]
         return port
@@ -66,8 +75,8 @@ class DockerSandboxService(SandboxService):
         """Extract runtime ID from container name"""
         if not container_name.startswith(self.container_name_prefix):
             return None
-        
-        uuid_str = container_name[len(self.container_name_prefix):]
+
+        uuid_str = container_name[len(self.container_name_prefix) :]
         try:
             return UUID(uuid_str)
         except ValueError:
@@ -97,7 +106,7 @@ class DockerSandboxService(SandboxService):
         labels = container.labels or {}
         user_id_str = labels.get("user_id")
         sandbox_spec_id = labels.get("sandbox_spec_id")
-        
+
         if not user_id_str or not sandbox_spec_id:
             return None
 
@@ -114,7 +123,7 @@ class DockerSandboxService(SandboxService):
         # Generate URL and session key for running containers
         url = None
         session_api_key = None
-        
+
         if status == SandboxStatus.RUNNING:
             # Get the first exposed port mapping
             port_bindings = container.attrs.get("NetworkSettings", {}).get("Ports", {})
@@ -124,7 +133,7 @@ class DockerSandboxService(SandboxService):
                         host_port = host_bindings[0]["HostPort"]
                         url = self.exposed_url_pattern.format(port=host_port)
                         break
-            
+
             # Generate session API key
             session_api_key = SecretStr(secrets.token_urlsafe(32))
 
@@ -174,9 +183,7 @@ class DockerSandboxService(SandboxService):
             if end_idx < len(sandboxes):
                 next_page_id = str(end_idx)
 
-            return SandboxPage(
-                items=paginated_containers, next_page_id=next_page_id
-            )
+            return SandboxPage(items=paginated_containers, next_page_id=next_page_id)
 
         except APIError:
             return SandboxPage(items=[], next_page_id=None)
@@ -203,7 +210,7 @@ class DockerSandboxService(SandboxService):
         # Get runtime image info
         sandbox_spec_service = get_default_sandbox_spec_service()
         sandbox_spec = await sandbox_spec_service.get_sandbox_spec(sandbox_spec_id)
-        
+
         if sandbox_spec is None:
             raise ValueError(f"Runtime image {sandbox_spec_id} not found")
 
@@ -213,7 +220,7 @@ class DockerSandboxService(SandboxService):
 
         # Prepare environment variables
         env_vars = sandbox_spec.initial_env.copy()
-        
+
         # Prepare port mappings and add port environment variables
         port_mappings = {}
         for container_port, description in sandbox_spec.exposed_ports.items():
@@ -233,7 +240,7 @@ class DockerSandboxService(SandboxService):
         volumes = {
             f"openhands-workspace-{container_id}": {
                 "bind": sandbox_spec.working_dir,
-                "mode": "rw"
+                "mode": "rw",
             }
         }
 
@@ -262,12 +269,12 @@ class DockerSandboxService(SandboxService):
         try:
             container_name = self._container_name_from_id(id)
             container = self._client.containers.get(container_name)
-            
+
             if container.status == "paused":
                 container.unpause()
             elif container.status == "exited":
                 container.start()
-            
+
             return True
         except (NotFound, APIError):
             return False
@@ -277,10 +284,10 @@ class DockerSandboxService(SandboxService):
         try:
             container_name = self._container_name_from_id(id)
             container = self._client.containers.get(container_name)
-            
+
             if container.status == "running":
                 container.pause()
-            
+
             return True
         except (NotFound, APIError):
             return False
@@ -290,14 +297,14 @@ class DockerSandboxService(SandboxService):
         try:
             container_name = self._container_name_from_id(id)
             container = self._client.containers.get(container_name)
-            
+
             # Stop the container if it's running
             if container.status in ["running", "paused"]:
                 container.stop(timeout=10)
-            
+
             # Remove the container
             container.remove()
-            
+
             # Remove associated volume
             try:
                 volume_name = f"openhands-workspace-{id}"
@@ -306,7 +313,7 @@ class DockerSandboxService(SandboxService):
             except (NotFound, APIError):
                 # Volume might not exist or already removed
                 pass
-            
+
             return True
         except (NotFound, APIError):
             return False

@@ -31,10 +31,10 @@ def main() -> None:
     try:
         subprocess.run(["pyinstaller", spec_file], check=True)
         print("Build successful!")
-        
+
         # Test the executable
         test_executable()
-        
+
     except subprocess.CalledProcessError as e:
         print(f"Build failed: {e}")
         sys.exit(1)
@@ -42,7 +42,7 @@ def main() -> None:
 
 def create_spec_file(spec_file: str) -> None:
     """Create a basic PyInstaller spec file."""
-    spec_content = '''# -*- mode: python ; coding: utf-8 -*-
+    spec_content = """# -*- mode: python ; coding: utf-8 -*-
 
 a = Analysis(
     ['openhands_server/main.py'],
@@ -85,9 +85,9 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
-'''
-    
-    with open(spec_file, 'w') as f:
+"""
+
+    with open(spec_file, "w") as f:
         f.write(spec_content)
 
 
@@ -97,17 +97,14 @@ def test_executable() -> None:
     if not executable_path.exists():
         print("Executable not found at dist/openhands-server")
         sys.exit(1)
-    
+
     print("Testing executable...")
     try:
         # Test with --help flag
         result = subprocess.run(
-            [str(executable_path), "--help"],
-            capture_output=True,
-            text=True,
-            timeout=10
+            [str(executable_path), "--help"], capture_output=True, text=True, timeout=10
         )
-        
+
         if result.returncode == 0:
             print("Executable test passed!")
         else:
@@ -115,7 +112,7 @@ def test_executable() -> None:
             print(f"stdout: {result.stdout}")
             print(f"stderr: {result.stderr}")
             sys.exit(1)
-            
+
     except subprocess.TimeoutExpired:
         print("Executable test timed out")
         sys.exit(1)

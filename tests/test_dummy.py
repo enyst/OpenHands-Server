@@ -18,15 +18,18 @@ def test_dummy_functionality() -> None:
 def test_import_main() -> None:
     """Test that the main module can be imported."""
     from openhands_server.main import main
-    
+
     assert callable(main)
 
 
-@pytest.mark.parametrize("input_value,expected", [
-    (1, 2),
-    (2, 3),
-    (10, 11),
-])
+@pytest.mark.parametrize(
+    "input_value,expected",
+    [
+        (1, 2),
+        (2, 3),
+        (10, 11),
+    ],
+)
 def test_parametrized_dummy(input_value: int, expected: int) -> None:
     """Parametrized dummy test."""
     assert input_value + 1 == expected

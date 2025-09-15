@@ -1,5 +1,3 @@
-
-
 from abc import ABC, abstractmethod
 from enum import Enum
 from uuid import UUID
@@ -8,10 +6,10 @@ from openhands_server.user.user_models import AuthType
 
 
 class ProviderType(Enum):
-    GITHUB = 'GITHUB'
-    #GITLAB = 'GITLAB'
-    #BITBUCKET = 'BITBUCKET'
-    #SLACK = 'SLACK'
+    GITHUB = "GITHUB"
+    # GITLAB = 'GITLAB'
+    # BITBUCKET = 'BITBUCKET'
+    # SLACK = 'SLACK'
 
 
 class ProviderToken(ABC):
@@ -20,19 +18,20 @@ class ProviderToken(ABC):
 
 class UserContext(ABC):
     """Object for providing user access"""
+
     user_id: UUID
     auth_type: AuthType
 
     # TODO: Implement this as needed
 
-    #async def load_settings():
+    # async def load_settings():
     #    """ Load settings for the user """
 
-    #async def store_settings():
+    # async def store_settings():
     #    """ Store settings for the user """
 
-    #async def load_secrets():
+    # async def load_secrets():
     #    """ Load secrets for the user """
 
-    #async def store_secrets():
+    # async def store_secrets():
     #    """ Store secrets for the user """

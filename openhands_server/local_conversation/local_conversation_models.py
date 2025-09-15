@@ -1,5 +1,3 @@
-
-
 from datetime import datetime
 from enum import Enum
 from uuid import UUID
@@ -13,10 +11,10 @@ from openhands_server.utils.date_utils import utc_now
 
 # TODO: Review these status with Calvin & Xingyao
 class ConversationStatus(Enum):
-    RUNNING = 'RUNNING'
-    PAUSED = 'PAUSED'
-    FINISHED = 'FINISHED'
-    STOPPED = 'STOPPED'
+    RUNNING = "RUNNING"
+    PAUSED = "PAUSED"
+    FINISHED = "FINISHED"
+    STOPPED = "STOPPED"
 
 
 class StartLocalConversationRequest(BaseModel):
@@ -34,7 +32,8 @@ class StoredLocalConversation(StartLocalConversationRequest):
 
 
 class LocalConversationInfo(StoredLocalConversation):
-    """ Information about a conversation running locally without a Runtime sandbox. """
+    """Information about a conversation running locally without a Runtime sandbox."""
+
     status: ConversationStatus = ConversationStatus.STOPPED
 
 
