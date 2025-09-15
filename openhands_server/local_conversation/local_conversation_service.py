@@ -31,7 +31,6 @@ class LocalConversationService(ABC):
     ) -> LocalConversationInfo | None:
         """Get a single local conversation info. Return None if the conversation was not found."""
 
-    @abstractmethod
     async def batch_get_local_conversations(
         self, conversation_ids: list[UUID]
     ) -> list[LocalConversationInfo | None]:
@@ -98,7 +97,8 @@ def get_default_local_conversation_service() -> LocalConversationService:
     )
 
     local_server_config = get_default_local_server_config()
-    _local_conversation_service = get_impl(
+    impl = get_impl(
         LocalConversationService, local_server_config.local_conversation_service
     )
+    _local_conversation_service = impl.get_instance()
     return _local_conversation_service
