@@ -47,9 +47,7 @@ async def search_local_conversation_events(
     ] = None,
     limit: Annotated[
         int,
-        Query(
-            title="The max number of results in the page", gt=0, lte=100
-        ),
+        Query(title="The max number of results in the page", gt=0, lte=100),
     ] = 100,
 ) -> LocalConversationPage:
     """Search / List local events"""

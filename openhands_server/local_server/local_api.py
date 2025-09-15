@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
+
 from fastapi import FastAPI
 
 from openhands_server.local_conversation.local_conversation_event_router import (
