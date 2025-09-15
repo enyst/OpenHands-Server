@@ -5,13 +5,13 @@ from uuid import UUID
 
 import openhands.tools    
 from openhands.sdk import Conversation, EventBase, LocalFileStore, Message, Agent, create_mcp_tools
+from openhands.sdk.conversation.state import AgentExecutionStatus
 from openhands.sdk.utils.async_utils import (
     AsyncCallbackWrapper,
     AsyncConversationCallback,
 )
 from openhands_server.event.event_context import EventContext
 from openhands_server.event.event_models import EventPage
-from openhands.sdk.conversation.state import AgentExecutionStatus
 from openhands_server.local_conversation.local_conversation_models import (
     StoredLocalConversation,
 )
@@ -81,9 +81,11 @@ class LocalConversationEventContext(EventContext):
     async def send_message(self, message: Message):
         async with self._lock:
             loop = asyncio.get_running_loop()
-            asyncio.create_task(
-                loop.run_in_executor(None, self._conversation.send_message, message)
-            )
+            loop.run_in_executor(None, self._conversation.send_message, message)
+            with self._conversation.state as state:
+                if state.agent_status != AgentExecutionStatus.RUNNING:
+                    loop.run_in_executor(None, self._conversation.run, message)
+
 
     async def subscribe_to_events(self, callback: AsyncConversationCallback) -> UUID:
         return self._pub_sub.subscribe(callback)
@@ -127,28 +129,24 @@ class LocalConversationEventContext(EventContext):
             raise RuntimeError("Conversation not started")
         async with self._lock:
             loop = asyncio.get_running_loop()
-            asyncio.create_task(loop.run_in_executor(None, self._conversation.run))
+            loop.run_in_executor(None, self._conversation.run)
 
     async def pause(self):
         async with self._lock:
             if self._conversation:
                 loop = asyncio.get_running_loop()
-                asyncio.create_task(
-                    loop.run_in_executor(None, self._conversation.pause)
-                )
+                loop.run_in_executor(None, self._conversation.pause)
 
     async def close(self):
         async with self._lock:
             if self._conversation:
                 loop = asyncio.get_running_loop()
-                asyncio.create_task(
-                    loop.run_in_executor(None, self._conversation.close)
-                )
+                loop.run_in_executor(None, self._conversation.close)
 
     async def get_status(self) -> AgentExecutionStatus:
         async with self._lock:
             if not self._conversation:
-                return None
+                return AgentExecutionStatus.ERROR
             with self._conversation.state as state:
                 return state.agent_status
 

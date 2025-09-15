@@ -1,3 +1,4 @@
+from pathlib import Path
 from pydantic import BaseModel, Field
 
 
@@ -15,6 +16,14 @@ class LocalServerConfig(BaseModel):
     allow_cors_origins: set[str] = Field(
         default_factory=set,
         description="Set of CORS origins permitted by this server. (Default empty set only accepts anything from localhost)",
+    )
+    conversations_path: Path = Field(
+        default=Path("workspace/project"),
+        description="The location of the workspace directory where files the agent reads from / writes to in the local file system"
+    )
+    workspace_path: Path = Field(
+        default=Path("workspace/conversations"),
+        description="The location of the directory where conversations and events are stored in the local file system"
     )
     model_config = {"frozen": True}
 

@@ -7,14 +7,12 @@ import httpx
 from sqlalchemy import select
 
 from openhands.sdk import EventBase
+from openhands.sdk.conversation.state import AgentExecutionStatus
 from openhands.sdk.llm.utils.metrics import MetricsSnapshot
 from openhands_server.database import AsyncSessionLocal
 from openhands_server.event.event_models import EventPage
 from openhands_server.event.read_only_event_context import ReadOnlyEventContext
 from openhands_server.local_conversation.agent_info import AgentInfo
-from openhands_server.local_conversation.local_conversation_models import (
-    ConversationStatus,
-)
 from openhands_server.sandbox.sandbox_models import SandboxStatus
 from openhands_server.sandbox.sandbox_service import (
     SandboxService,
@@ -97,16 +95,16 @@ class DockerSandboxedConversationService(SandboxedConversationService):
 
     def _sandbox_status_to_conversation_status(
         self, sandbox_status: SandboxStatus
-    ) -> ConversationStatus:
+    ) -> AgentExecutionStatus:
         """Convert sandbox status to conversation status"""
         status_mapping = {
-            SandboxStatus.RUNNING: ConversationStatus.RUNNING,
-            SandboxStatus.PAUSED: ConversationStatus.PAUSED,
-            SandboxStatus.STARTING: ConversationStatus.RUNNING,
-            SandboxStatus.DELETED: ConversationStatus.STOPPED,
-            SandboxStatus.ERROR: ConversationStatus.STOPPED,
+            SandboxStatus.RUNNING: AgentExecutionStatus.RUNNING,
+            SandboxStatus.PAUSED: AgentExecutionStatus.PAUSED,
+            SandboxStatus.STARTING: AgentExecutionStatus.RUNNING,
+            SandboxStatus.DELETED: AgentExecutionStatus.ERROR,
+            SandboxStatus.ERROR: AgentExecutionStatus.ERROR,
         }
-        return status_mapping.get(sandbox_status, ConversationStatus.STOPPED)
+        return status_mapping.get(sandbox_status, AgentExecutionStatus.ERROR)
 
     async def _stored_to_sandboxed_info(
         self,
@@ -116,7 +114,7 @@ class DockerSandboxedConversationService(SandboxedConversationService):
         """Convert stored database model to SandboxedConversationInfo with live status"""
         # Get live sandbox status
         sandbox_info = None
-        status = ConversationStatus.STOPPED
+        status = AgentExecutionStatus.FINISHED
 
         if stored.sandbox_id:
             sandbox_info = await self.sandbox_service.get_sandboxes(stored.sandbox_id)

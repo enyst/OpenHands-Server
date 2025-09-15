@@ -10,6 +10,7 @@ from openhands_server.local_conversation.local_conversation_models import (
     SendMessageRequest,
     StartLocalConversationRequest,
 )
+from openhands_server.local_server.local_server_config import LocalServerConfig
 from openhands_server.utils.import_utils import get_impl
 
 
@@ -34,7 +35,6 @@ class LocalConversationService(ABC):
     ) -> LocalConversationInfo | None:
         """Get a single local conversation info. Return None if the conversation was not found."""
 
-    @abstractmethod
     async def batch_get_local_conversations(
         self, conversation_ids: list[UUID]
     ) -> list[LocalConversationInfo | None]:
@@ -94,7 +94,7 @@ class LocalConversationService(ABC):
 
     @classmethod
     @abstractmethod
-    def get_instance(cls) -> "LocalConversationService":
+    def get_instance(cls, local_server_config: LocalServerConfig) -> "LocalConversationService":
         """Get an instance of runtime image service"""
 
 
@@ -113,7 +113,8 @@ def get_default_local_conversation_service() -> type[LocalConversationService]:
     )
 
     local_server_config = get_default_local_server_config()
-    _local_conversation_service = get_impl(
+    impl = get_impl(
         LocalConversationService, local_server_config.local_conversation_service
     )
+    _local_conversation_service = impl.get_instance(local_server_config)
     return _local_conversation_service

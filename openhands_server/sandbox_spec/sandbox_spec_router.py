@@ -51,7 +51,7 @@ async def get_sandbox_spec(id: UUID) -> SandboxSpecInfo:
 
 
 @router.get("/")
-async def batch_get_sandbox_specs(ids: list[UUID]) -> list[SandboxSpecInfo | None]:
+async def batch_get_sandbox_specs(ids: Annotated[list[UUID], Query()]) -> list[SandboxSpecInfo | None]:
     """Get a batch of sandbox specs given their ids, returning null for any missing spec."""
     assert len(ids) <= 100
     sandbox_specss = await sandbox_spec_service.batch_get_sandbox_specs(ids)

@@ -12,7 +12,7 @@ def main(app_name: str = "openhands_server.local_server.local_api:api"):
         "--port", type=int, default=8000, help="Port to bind to (default: 8000)"
     )
     parser.add_argument(
-        "--reload", action="store_true", help="Enable auto-reload for development"
+        "--reload", default=True, action="store_true", help="Enable auto-reload for development"
     )
 
     args = parser.parse_args()

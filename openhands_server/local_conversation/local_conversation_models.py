@@ -6,10 +6,9 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from openhands.sdk import LLM, AgentContext, ToolSpec, TextContent, ImageContent
-from openhands.sdk.llm.utils.metrics import MetricsSnapshot
 from openhands.sdk.conversation.state import AgentExecutionStatus
+from openhands.sdk.llm.utils.metrics import MetricsSnapshot
 from openhands_server.utils.date_utils import utc_now
-
 
 
 class StartLocalConversationRequest(BaseModel):
