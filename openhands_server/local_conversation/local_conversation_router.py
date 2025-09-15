@@ -18,7 +18,6 @@ from openhands_server.utils.success import Success
 
 router = APIRouter(prefix="/local-conversations")
 local_conversation_service = get_default_local_conversation_service()
-router.lifespan(local_conversation_service)
 
 # LocalConversations are not available in the outer nesting container. They do not currently have permissions
 # as all validation is through the session_api_key

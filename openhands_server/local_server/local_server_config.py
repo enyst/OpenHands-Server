@@ -5,6 +5,7 @@ class LocalServerConfig(BaseModel):
     """Immutable configuration for a server running in local mode. (Typically inside a sandbox)."""
 
     session_api_key: str | None = Field(
+        default=None,
         description="The session api key used to authenticate all incoming requests. None implies the server will be unsecured"
     )
     local_conversation_service: str = Field(
