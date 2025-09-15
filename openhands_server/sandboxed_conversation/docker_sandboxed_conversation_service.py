@@ -1,14 +1,18 @@
 
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID
+
+import docker
 from openhands_server.event.read_only_event_context import ReadOnlyEventContext
+from openhands_server.sandbox.sandbox_service import SandboxService, get_default_sandbox_service
 from openhands_server.sandboxed_conversation.sandboxed_conversation_models import SandboxedConversationInfo, SandboxedConversationPage
 from openhands_server.sandboxed_conversation.sandboxed_conversation_service import SandboxedConversationService
 
 
 @dataclass
 class DockerSandboxedConversationService(SandboxedConversationService):
+    sandbox_service: SandboxService = field(default_factory=get_default_sandbox_service)
 
     async def search_sandboxed_conversations(self, user_id: UUID | None = None, page_id: str | None = None, limit: int = 100) -> SandboxedConversationPage:
         """Load a page of sandboxed conversation info from the database and combine it with live status from the docker container"""
@@ -31,14 +35,15 @@ class DockerSandboxedConversationService(SandboxedConversationService):
     # Lifecycle methods
 
     async def __aenter__(self):
-        """Start using this runtime image service"""
-        raise NotImplementedError()
+        """Start using this sandboxed conversation service"""
+        self._client = docker.from_env()
+        return self
 
-    async def __aexit__(self, exc_type, exc_value, traceback):
-        """Stop using this runtime image service"""
-        raise NotImplementedError()
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Stop using this sandbox service"""
+        self._client = None
 
     @classmethod
     def get_instance(cls) -> "SandboxedConversationService":
-        """ Get an instance of runtime image service """
+        """ Get an instance of sandboxed conversation service """
         raise NotImplementedError()

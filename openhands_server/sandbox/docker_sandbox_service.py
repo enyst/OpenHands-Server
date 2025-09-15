@@ -41,7 +41,6 @@ class ExposedPort:
 @dataclass
 class DockerSandboxService(SandboxService):
 
-    client: docker.DockerClient = field(default=None)
     container_name_prefix: str = "openhands-runtime-"
     exposed_url_pattern: str = "http://localhost:{port}"
     sandbox_spec_service: DockerSandboxSpecService = field(default_factory=DockerSandboxSpecService.get_instance)
@@ -49,12 +48,7 @@ class DockerSandboxService(SandboxService):
     exposed_port: list[ExposedPort] = field(default_factory=lambda: [
         ExposedPort("APPLICATION_SERVER_PORT", 'The port on which the application server runs within the container')
     ])
-
-    def _get_client(self) -> docker.DockerClient:
-        """Get Docker client, creating it if necessary"""
-        if self.client is None:
-            self.client = docker.from_env()
-        return self.client
+    _client: docker.DockerClient | None = field(default=None)
 
     def _find_unused_port(self) -> int:
         """Find an unused port on the host machine"""
@@ -150,7 +144,7 @@ class DockerSandboxService(SandboxService):
         """Search for sandboxes"""
         try:
             # Get all containers with our prefix
-            all_containers = self._get_client().containers.list(all=True)
+            all_containers = self._client.containers.list(all=True)
             sandboxes = []
 
             for container in all_containers:
@@ -191,7 +185,7 @@ class DockerSandboxService(SandboxService):
         """Get a single sandbox info"""
         try:
             container_name = self._container_name_from_id(id)
-            container = self._get_client().containers.get(container_name)
+            container = self._client.containers.get(container_name)
             return self._container_to_runtime_info(container)
         except (NotFound, APIError):
             return None
@@ -237,7 +231,7 @@ class DockerSandboxService(SandboxService):
 
         try:
             # Create and start the container
-            container = self._get_client().containers.run(
+            container = self._client.containers.run(
                 image=sandbox_spec_id,
                 command=sandbox_spec.command,
                 name=container_name,
@@ -259,7 +253,7 @@ class DockerSandboxService(SandboxService):
         """Resume a paused sandbox"""
         try:
             container_name = self._container_name_from_id(id)
-            container = self._get_client().containers.get(container_name)
+            container = self._client.containers.get(container_name)
             
             if container.status == "paused":
                 container.unpause()
@@ -274,7 +268,7 @@ class DockerSandboxService(SandboxService):
         """Pause a running sandbox"""
         try:
             container_name = self._container_name_from_id(id)
-            container = self._get_client().containers.get(container_name)
+            container = self._client.containers.get(container_name)
             
             if container.status == "running":
                 container.pause()
@@ -287,7 +281,7 @@ class DockerSandboxService(SandboxService):
         """Delete a sandbox"""
         try:
             container_name = self._container_name_from_id(id)
-            container = self._get_client().containers.get(container_name)
+            container = self._client.containers.get(container_name)
             
             # Stop the container if it's running
             if container.status in ["running", "paused"]:
@@ -299,7 +293,7 @@ class DockerSandboxService(SandboxService):
             # Remove associated volume
             try:
                 volume_name = f"openhands-workspace-{id}"
-                volume = self._get_client().volumes.get(volume_name)
+                volume = self._client.volumes.get(volume_name)
                 volume.remove()
             except (NotFound, APIError):
                 # Volume might not exist or already removed
@@ -311,11 +305,12 @@ class DockerSandboxService(SandboxService):
 
     async def __aenter__(self):
         """Start using this sandbox service"""
+        self._client = docker.from_env()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Stop using this sandbox service"""
-        pass
+        self._client = None
 
     @classmethod
     def get_instance(cls) -> "SandboxService":

@@ -40,15 +40,15 @@ class SandboxedConversationService(ABC):
     # Lifecycle methods
 
     async def __aenter__(self):
-        """Start using this runtime image service"""
+        """Start using this sandboxed conversation service"""
 
     async def __aexit__(self, exc_type, exc_value, traceback):
-        """Stop using this runtime image service"""
+        """Stop using this sandboxed conversation service"""
 
     @classmethod
     @abstractmethod
     def get_instance(cls) -> "SandboxedConversationService":
-        """ Get an instance of runtime image service """
+        """ Get an instance of sandboxed conversation service """
 
 
 _sandboxed_conversation_service: SandboxedConversationService = None
