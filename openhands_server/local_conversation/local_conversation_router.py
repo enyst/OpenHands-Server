@@ -6,8 +6,10 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Query, status
 
 from openhands_server.local_conversation.local_conversation_models import (
+    ConfirmationResponseRequest,
     LocalConversationInfo,
     LocalConversationPage,
+    SendMessageRequest,
     StartLocalConversationRequest,
 )
 from openhands_server.local_conversation.local_conversation_service import (
@@ -96,4 +98,31 @@ async def delete_local_conversation(id: UUID) -> Success:
     deleted = await local_conversation_service.delete_local_conversation(id)
     if not deleted:
         raise HTTPException(status.HTTP_400_BAD_REQUEST)
+    return Success()
+
+
+@router.post("/{id}/messages", responses={404: {"description": "Item not found"}})
+async def send_message_to_conversation(id: UUID, request: SendMessageRequest) -> Success:
+    """Send a message to a conversation and optionally run it."""
+    sent = await local_conversation_service.send_message_to_conversation(id, request)
+    if not sent:
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
+    return Success()
+
+
+@router.post("/{id}/run", responses={404: {"description": "Item not found"}})
+async def run_conversation(id: UUID) -> Success:
+    """Start or resume the agent run for a conversation."""
+    started = await local_conversation_service.run_conversation(id)
+    if not started:
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
+    return Success()
+
+
+@router.post("/{id}/respond_to_confirmation", responses={404: {"description": "Item not found"}})
+async def respond_to_confirmation(id: UUID, request: ConfirmationResponseRequest) -> Success:
+    """Accept or reject a pending action in confirmation mode."""
+    responded = await local_conversation_service.respond_to_confirmation(id, request)
+    if not responded:
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
     return Success()

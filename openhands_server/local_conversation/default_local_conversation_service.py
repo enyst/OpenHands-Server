@@ -10,9 +10,12 @@ from openhands_server.event.event_context import EventContext
 from openhands_server.local_conversation.local_conversation_event_context import (
     LocalConversationEventContext,
 )
+from openhands.sdk import Message
 from openhands_server.local_conversation.local_conversation_models import (
+    ConfirmationResponseRequest,
     LocalConversationInfo,
     LocalConversationPage,
+    SendMessageRequest,
     StartLocalConversationRequest,
     StoredLocalConversation,
 )
@@ -77,17 +80,17 @@ class DefaultLocalConversationService(LocalConversationService):
         self, request: StartLocalConversationRequest
     ) -> LocalConversationInfo:
         """Start a local conversation and return its id."""
-        id = (uuid4(),)
+        id = uuid4()
         stored = StoredLocalConversation(id=id, **request.model_dump())
         conversation = LocalConversationEventContext(
             stored=stored,
             file_store_path=self.file_store_path / id.hex / "conversation",
             working_dir=self.workspace_path / id.hex,
         )
-        conversation.subscribe_to_events(_EventListener(self, id))
+        await conversation.subscribe_to_events(_EventListener(self, id))
         self._conversations[id] = conversation
         await conversation.start()
-        return self.get_local_conversation(id)
+        return await self.get_local_conversation(id)
 
     async def pause_local_conversation(self, conversation_id: UUID) -> bool:
         conversation = self._conversations.get(conversation_id)
@@ -102,11 +105,56 @@ class DefaultLocalConversationService(LocalConversationService):
         return bool(conversation)
 
     async def delete_local_conversation(self, conversation_id: UUID) -> bool:
-        conversation = self._conversations.pop(conversation_id)
+        conversation = self._conversations.pop(conversation_id, None)
         if conversation:
             await conversation.close()
-        shutil.rmtree(self.file_store_path / conversation_id.hex)
-        shutil.rmtree(self.workspace_path / conversation_id.hex)
+            shutil.rmtree(self.file_store_path / conversation_id.hex, ignore_errors=True)
+            shutil.rmtree(self.workspace_path / conversation_id.hex, ignore_errors=True)
+            return True
+        return False
+
+    async def send_message_to_conversation(
+        self, conversation_id: UUID, request: SendMessageRequest
+    ) -> bool:
+        """Send a message to a conversation and optionally run it."""
+        conversation = self._conversations.get(conversation_id)
+        if not conversation:
+            return False
+        
+        message = Message(role=request.role, content=request.content)
+        await conversation.send_message(message)
+        
+        if request.run:
+            await conversation.start()
+        
+        return True
+
+    async def run_conversation(self, conversation_id: UUID) -> bool:
+        """Start or resume the agent run for a conversation."""
+        conversation = self._conversations.get(conversation_id)
+        if not conversation:
+            return False
+        
+        await conversation.start()
+        return True
+
+    async def respond_to_confirmation(
+        self, conversation_id: UUID, request: ConfirmationResponseRequest
+    ) -> bool:
+        """Accept or reject a pending action in confirmation mode."""
+        conversation = self._conversations.get(conversation_id)
+        if not conversation:
+            return False
+        
+        # TODO: Implement confirmation response logic
+        # This would need to be implemented in the conversation/agent SDK
+        # For now, we'll just resume if accepted, pause if rejected
+        if request.accept:
+            await conversation.start()
+        else:
+            await conversation.pause()
+        
+        return True
 
     async def get_event_context(self, id: UUID) -> EventContext | None:
         event_context = self._conversations.get(id)
@@ -145,7 +193,10 @@ class DefaultLocalConversationService(LocalConversationService):
 
 @dataclass
 class _EventListener:
-    conversation: LocalConversationEventContext
+    service: "DefaultLocalConversationService"
+    conversation_id: UUID
 
-    async def __call__(self, message: Message):
-        self.conversation.stored.updated_at = utc_now()
+    async def __call__(self, event):
+        conversation = self.service._conversations.get(self.conversation_id)
+        if conversation:
+            conversation.stored.updated_at = utc_now()

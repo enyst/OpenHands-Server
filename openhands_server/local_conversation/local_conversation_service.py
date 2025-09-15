@@ -2,9 +2,12 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 from openhands_server.event.event_context import EventContext
+from openhands.sdk import Message
 from openhands_server.local_conversation.local_conversation_models import (
+    ConfirmationResponseRequest,
     LocalConversationInfo,
     LocalConversationPage,
+    SendMessageRequest,
     StartLocalConversationRequest,
 )
 from openhands_server.utils.import_utils import get_impl
@@ -61,6 +64,22 @@ class LocalConversationService(ABC):
     @abstractmethod
     async def delete_local_conversation(self, id: UUID) -> bool:
         """Delete a local conversation. Stop it if it is running."""
+
+    @abstractmethod
+    async def send_message_to_conversation(
+        self, id: UUID, request: SendMessageRequest
+    ) -> bool:
+        """Send a message to a conversation and optionally run it."""
+
+    @abstractmethod
+    async def run_conversation(self, id: UUID) -> bool:
+        """Start or resume the agent run for a conversation."""
+
+    @abstractmethod
+    async def respond_to_confirmation(
+        self, id: UUID, request: ConfirmationResponseRequest
+    ) -> bool:
+        """Accept or reject a pending action in confirmation mode."""
 
     # Event methods...
 

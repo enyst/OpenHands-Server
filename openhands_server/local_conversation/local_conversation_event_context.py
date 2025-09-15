@@ -10,8 +10,8 @@ from openhands.sdk.utils.async_utils import (
 )
 from openhands_server.event.event_context import EventContext
 from openhands_server.event.event_models import EventPage
+from openhands.sdk.conversation.state import AgentExecutionStatus
 from openhands_server.local_conversation.local_conversation_models import (
-    ConversationStatus,
     StoredLocalConversation,
 )
 from openhands_server.utils.date_utils import utc_now
@@ -26,7 +26,7 @@ class LocalConversationEventContext(EventContext):
 
     stored: StoredLocalConversation
     file_store_path: Path
-    working_dir: str
+    working_dir: Path
     _lock: asyncio.Lock = field(default_factory=asyncio.Lock, init=False)
     _conversation: Conversation | None = field(default=None, init=False)
     _pub_sub: PubSub = field(default_factory=PubSub, init=False)
@@ -75,6 +75,10 @@ class LocalConversationEventContext(EventContext):
 
         return EventPage(items=items)
 
+    async def search(self, page_id: str = None, limit: int = 100) -> EventPage:
+        """Alias for search_events to match the expected interface."""
+        return await self.search_events(page_id, limit)
+
     async def send_message(self, message: Message):
         async with self._lock:
             loop = asyncio.get_running_loop()
@@ -105,12 +109,36 @@ class LocalConversationEventContext(EventContext):
 
                 self._conversation.run()
 
-            agent = self.stored.agent.create_agent(self.working_dir)
+            # Create agent from stored configuration
+            from openhands.sdk import Agent, create_mcp_tools
+            import openhands.tools
+            
+            llm = self.stored.llm
+            tools = []
+            
+            # Create tools from tool specs
+            for tool_spec in self.stored.tools:
+                if tool_spec.name not in openhands.tools.__dict__:
+                    continue
+                tool_class = openhands.tools.__dict__[tool_spec.name]
+                tools.append(tool_class.create(**tool_spec.params))
+            
+            # Add MCP tools if configured
+            if self.stored.mcp_config:
+                mcp_tools = create_mcp_tools(self.stored.mcp_config, timeout=30)
+                tools.extend(mcp_tools)
+            
+            agent = Agent(llm=llm, tools=tools)
+            
             conversation = Conversation(
                 agent=agent,
                 callbacks=[AsyncCallbackWrapper(self._pub_sub)],
                 persist_filestore=LocalFileStore(self.file_store_path / "events"),
+                agent_context=self.stored.agent_context,
             )
+            
+            # Set confirmation mode if enabled
+            conversation.set_confirmation_mode(self.stored.confirmation_mode)
             self._conversation = conversation
             loop = asyncio.get_running_loop()
             asyncio.create_task(loop.run_in_executor(None, conversation.run))
@@ -131,16 +159,16 @@ class LocalConversationEventContext(EventContext):
                     loop.run_in_executor(None, self._conversation.close)
                 )
 
-    async def get_status(self) -> ConversationStatus:
+    async def get_status(self) -> AgentExecutionStatus:
         async with self._lock:
             if not self._conversation:
-                return ConversationStatus.STOPPED
+                return AgentExecutionStatus.IDLE
             with self._conversation.state as state:
                 if state.agent_paused:
-                    return ConversationStatus.PAUSED
+                    return AgentExecutionStatus.PAUSED
                 if state.agent_finished:
-                    return ConversationStatus.FINISHED
-            return ConversationStatus.RUNNING
+                    return AgentExecutionStatus.FINISHED
+            return AgentExecutionStatus.RUNNING
 
     async def __aenter__(self):
         await self.start()
