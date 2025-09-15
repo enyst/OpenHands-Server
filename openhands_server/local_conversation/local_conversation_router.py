@@ -110,15 +110,6 @@ async def send_message_to_conversation(id: UUID, request: SendMessageRequest) ->
     return Success()
 
 
-@router.post("/{id}/run", responses={404: {"description": "Item not found"}})
-async def run_conversation(id: UUID) -> Success:
-    """Start or resume the agent run for a conversation."""
-    started = await local_conversation_service.run_conversation(id)
-    if not started:
-        raise HTTPException(status.HTTP_404_NOT_FOUND)
-    return Success()
-
-
 @router.post("/{id}/respond_to_confirmation", responses={404: {"description": "Item not found"}})
 async def respond_to_confirmation(id: UUID, request: ConfirmationResponseRequest) -> Success:
     """Accept or reject a pending action in confirmation mode."""

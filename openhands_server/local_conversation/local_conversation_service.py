@@ -72,10 +72,6 @@ class LocalConversationService(ABC):
         """Send a message to a conversation and optionally run it."""
 
     @abstractmethod
-    async def run_conversation(self, id: UUID) -> bool:
-        """Start or resume the agent run for a conversation."""
-
-    @abstractmethod
     async def respond_to_confirmation(
         self, id: UUID, request: ConfirmationResponseRequest
     ) -> bool:
@@ -102,10 +98,10 @@ class LocalConversationService(ABC):
         """Get an instance of runtime image service"""
 
 
-_local_conversation_service: LocalConversationService = None
+_local_conversation_service: type[LocalConversationService] | None = None
 
 
-def get_default_local_conversation_service() -> LocalConversationService:
+def get_default_local_conversation_service() -> type[LocalConversationService]:
     global _local_conversation_service
     if _local_conversation_service:
         return _local_conversation_service

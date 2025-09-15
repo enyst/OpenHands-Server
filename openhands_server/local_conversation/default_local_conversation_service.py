@@ -125,7 +125,7 @@ class DefaultLocalConversationService(LocalConversationService):
         await conversation.send_message(message)
         
         if request.run:
-            await conversation.start()
+            await conversation.run()
         
         return True
 
