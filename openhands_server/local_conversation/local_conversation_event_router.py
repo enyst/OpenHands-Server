@@ -28,7 +28,6 @@ from openhands_server.utils.success import Success
 
 router = APIRouter(prefix="/local-conversations/{conversation_id}/events")
 local_conversation_service = get_default_local_conversation_service()
-router.lifespan(local_conversation_service)
 logger = logging.getLogger(__name__)
 
 # LocalConversations are not available in the outer nesting container. They do not currently have permissions
@@ -42,7 +41,7 @@ async def search_local_conversation_events(
     conversation_id: UUID,
     page_id: Annotated[
         str | None,
-        Query(title="Optional next_page_id from the previously returned page"),
+        Query(title="Optional next_page_id from the previously returned page", default=None),
     ] = None,
     limit: Annotated[
         int,

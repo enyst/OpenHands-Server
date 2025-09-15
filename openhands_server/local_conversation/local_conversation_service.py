@@ -39,7 +39,7 @@ class LocalConversationService(ABC):
         """Get a batch of local conversations. Return None for any conversation which was not found."""
         results = []
         for id in conversation_ids:
-            result = await self.get_sandbox(id)
+            result = await self.get_local_conversation(id)
             results.append(result)
         return results
 
@@ -91,7 +91,12 @@ def get_default_local_conversation_service() -> LocalConversationService:
     global _local_conversation_service
     if _local_conversation_service:
         return _local_conversation_service
+    
+    # TODO: Polymorphic injection may be overkill for the local server - particularly if we
+    # place this in the agent SDK.
+    from openhands_server.local_server.local_server_config import get_default_local_server_config
+    local_server_config = get_default_local_server_config()
     _local_conversation_service = get_impl(
-        LocalConversationService,
+        LocalConversationService, local_server_config.local_conversation_service
     )
     return _local_conversation_service
