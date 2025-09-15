@@ -5,7 +5,7 @@ from tkinter import EventType
 from uuid import UUID
 
 from openhands_server.event.read_only_event_context import ReadOnlyEventContext
-from openhands_server.sandboxed_conversation.sandboxed_conversation_models import SandboxedConversationInfo, SandboxedConversationPage, StartSandboxedConversationRequest
+from openhands_server.sandboxed_conversation.sandboxed_conversation_models import SandboxedConversationInfo, SandboxedConversationPage
 from openhands_server.utils.import_utils import get_impl
 
 
