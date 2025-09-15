@@ -1,4 +1,3 @@
-from typing import Sequence
 from urllib.parse import urlparse
 
 from fastapi import HTTPException, Request, Response, status
@@ -12,7 +11,7 @@ class LocalhostCORSMiddleware(CORSMiddleware):
     while using standard CORS rules for other origins.
     """
 
-    def __init__(self, app: ASGIApp, allow_origins: Sequence[str]) -> None:
+    def __init__(self, app: ASGIApp, allow_origins: list[str]) -> None:
         super().__init__(
             app,
             allow_origins=allow_origins,
@@ -33,25 +32,6 @@ class LocalhostCORSMiddleware(CORSMiddleware):
         # For missing origin or other origins, use the parent class's logic
         result: bool = super().is_allowed_origin(origin)
         return result
-
-
-class CacheControlMiddleware(BaseHTTPMiddleware):
-    """Middleware to disable caching for all routes by adding appropriate headers"""
-
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
-        response = await call_next(request)
-        if request.url.path.startswith("/assets"):
-            # The content of the assets directory has fingerprinted file names so we cache aggressively
-            response.headers["Cache-Control"] = "public, max-age=2592000, immutable"
-        else:
-            response.headers["Cache-Control"] = (
-                "no-cache, no-store, must-revalidate, max-age=0"
-            )
-            response.headers["Pragma"] = "no-cache"
-            response.headers["Expires"] = "0"
-        return response
 
 
 class ValidateSessionAPIKeyMiddleware(BaseHTTPMiddleware):

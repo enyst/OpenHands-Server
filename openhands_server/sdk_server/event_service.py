@@ -3,29 +3,37 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from uuid import UUID
 
-import openhands.tools    
-from openhands.sdk import Conversation, EventBase, LocalFileStore, Message, Agent, create_mcp_tools
+import openhands.tools
+from openhands.sdk import (
+    Agent,
+    Conversation,
+    EventBase,
+    LocalFileStore,
+    Message,
+    create_mcp_tools,
+)
 from openhands.sdk.conversation.state import AgentExecutionStatus
 from openhands.sdk.utils.async_utils import (
     AsyncCallbackWrapper,
     AsyncConversationCallback,
 )
-from openhands_server.event.event_context import EventContext
-from openhands_server.event.event_models import EventPage
-from openhands_server.local_conversation.local_conversation_models import (
-    StoredLocalConversation,
+from openhands_server.sdk_server.models import (
+    ConfirmationResponseRequest,
+    EventPage,
+    StoredConversation,
 )
-from openhands_server.utils.date_utils import utc_now
-from openhands_server.utils.pub_sub import PubSub
+from openhands_server.sdk_server.pub_sub import PubSub
+from openhands_server.sdk_server.utils import utc_now
 
 
 @dataclass
-class LocalConversationEventContext(EventContext):
+class EventService:
     """
-    Event service for a conversation running locally. Use an event manager to start the service before use
+    Event service for a conversation running locally, analagous to a conversation
+    in the SDK. Async mostly for forward compatibility
     """
 
-    stored: StoredLocalConversation
+    stored: StoredConversation
     file_store_path: Path
     working_dir: Path
     _lock: asyncio.Lock = field(default_factory=asyncio.Lock, init=False)
@@ -34,7 +42,7 @@ class LocalConversationEventContext(EventContext):
 
     async def load_meta(self):
         meta_file = self.file_store_path / "meta.json"
-        self.stored = StoredLocalConversation.model_validate_json(meta_file.read_text())
+        self.stored = StoredConversation.model_validate_json(meta_file.read_text())
 
     async def save_meta(self):
         self.stored.updated_at = utc_now()
@@ -42,17 +50,23 @@ class LocalConversationEventContext(EventContext):
         meta_file.write_text(self.stored.model_dump_json())
 
     async def get_event(self, event_id: str) -> EventBase | None:
-        if self._conversation is None:
-            raise RuntimeError("Conversation not started")
+        if not self._conversation:
+            raise ValueError("inactive_service")
         async with self._lock:
             with self._conversation.state as state:
-                event_id_idx = state.events.get_index(event_id)
-                return state.events[event_id_idx]
+                # TODO: It would be nice if the agent sdk had a method for
+                #       getting events by id
+                event = next(
+                    (event for event in state.events if event.id == event_id), None
+                )
+                return event
 
-    async def search_events(self, page_id: str | None = None, limit: int = 100) -> EventPage:
-        if self._conversation is None:
-            raise RuntimeError("Conversation not started")
-        
+    async def search_events(
+        self, page_id: str | None = None, limit: int = 100
+    ) -> EventPage:
+        if not self._conversation:
+            raise ValueError("inactive_service")
+
         items = []
         async with self._lock:
             with self._conversation.state as state:
@@ -74,18 +88,20 @@ class LocalConversationEventContext(EventContext):
 
         return EventPage(items=items)
 
-    async def search(self, page_id: str | None = None, limit: int = 100) -> EventPage:
-        """Alias for search_events to match the expected interface."""
-        return await self.search_events(page_id, limit)
+    async def batch_get_events(self, event_ids: list[str]) -> list[EventBase | None]:
+        """Given a list of ids, get events (Or none for any which were not found)"""
+        results = []
+        for event_id in event_ids:
+            result = await self.get_event(event_id)
+            results.append(result)
+        return results
 
     async def send_message(self, message: Message):
+        if not self._conversation:
+            raise ValueError("inactive_service")
         async with self._lock:
             loop = asyncio.get_running_loop()
             loop.run_in_executor(None, self._conversation.send_message, message)
-            with self._conversation.state as state:
-                if state.agent_status != AgentExecutionStatus.RUNNING:
-                    loop.run_in_executor(None, self._conversation.run, message)
-
 
     async def subscribe_to_events(self, callback: AsyncConversationCallback) -> UUID:
         return self._pub_sub.subscribe(callback)
@@ -97,39 +113,46 @@ class LocalConversationEventContext(EventContext):
         async with self._lock:
             llm = self.stored.llm
             tools = []
-            
+
             # Create tools from tool specs
             for tool_spec in self.stored.tools:
                 if tool_spec.name not in openhands.tools.__dict__:
                     continue
                 tool_class = openhands.tools.__dict__[tool_spec.name]
                 tools.append(tool_class.create(**tool_spec.params))
-            
+
             # Add MCP tools if configured
             if self.stored.mcp_config:
                 mcp_tools = create_mcp_tools(self.stored.mcp_config, timeout=30)
                 tools.extend(mcp_tools)
-            
+
             agent = Agent(llm=llm, tools=tools, agent_context=self.stored.agent_context)
             conversation = Conversation(
                 agent=agent,
-                callbacks=[AsyncCallbackWrapper(self._pub_sub, loop=asyncio.get_running_loop())],
+                callbacks=[
+                    AsyncCallbackWrapper(self._pub_sub, loop=asyncio.get_running_loop())
+                ],
                 persist_filestore=LocalFileStore(str(self.file_store_path / "events")),
             )
-            
+
             # Set confirmation mode if enabled
             conversation.set_confirmation_mode(self.stored.confirmation_mode)
             self._conversation = conversation
             await self.run()
 
-
     async def run(self):
         """Run the conversation asynchronously."""
         if not self._conversation:
-            raise RuntimeError("Conversation not started")
+            raise ValueError("inactive_service")
         async with self._lock:
             loop = asyncio.get_running_loop()
             loop.run_in_executor(None, self._conversation.run)
+
+    async def respond_to_confirmation(self, request: ConfirmationResponseRequest):
+        if request.accept:
+            await self.run()
+        else:
+            await self.pause()
 
     async def pause(self):
         async with self._lock:
@@ -155,5 +178,5 @@ class LocalConversationEventContext(EventContext):
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
-        self.save_meta()
+        await self.save_meta()
         await self.close()

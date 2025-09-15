@@ -1,17 +1,23 @@
 from datetime import datetime
-from enum import Enum
+from typing import Any, Literal
 from uuid import UUID
 
-from typing import Any, Literal
 from pydantic import BaseModel, Field
 
-from openhands.sdk import LLM, AgentContext, ToolSpec, TextContent, ImageContent
+from openhands.sdk import (
+    LLM,
+    AgentContext,
+    EventBase,
+    ImageContent,
+    TextContent,
+    ToolSpec,
+)
 from openhands.sdk.conversation.state import AgentExecutionStatus
 from openhands.sdk.llm.utils.metrics import MetricsSnapshot
-from openhands_server.utils.date_utils import utc_now
+from openhands_server.sdk_server.utils import utc_now
 
 
-class StartLocalConversationRequest(BaseModel):
+class StartConversationRequest(BaseModel):
     """Payload to create a new conversation."""
 
     llm: LLM = Field(
@@ -86,26 +92,27 @@ class StartLocalConversationRequest(BaseModel):
     )
 
 
-class StoredLocalConversation(StartLocalConversationRequest):
+class StoredConversation(StartConversationRequest):
+    """Stored details regarding a conversation"""
+
     id: UUID
     metrics: MetricsSnapshot | None = None
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
 
 
-class LocalConversationInfo(StoredLocalConversation):
+class ConversationInfo(StoredConversation):
     """Information about a conversation running locally without a Runtime sandbox."""
 
     status: AgentExecutionStatus = AgentExecutionStatus.IDLE
 
 
-class LocalConversationPage(BaseModel):
-    items: list[LocalConversationInfo]
+class ConversationPage(BaseModel):
+    items: list[ConversationInfo]
     next_page_id: str | None = None
 
 
-
-class StartConversationResponse(BaseModel):
+class ConversationResponse(BaseModel):
     conversation_id: str
     state: AgentExecutionStatus
 
@@ -131,7 +138,10 @@ class ConfirmationResponseRequest(BaseModel):
     reason: str = "User rejected the action."
 
 
-class ListConversationsItem(BaseModel):
-    conversation_id: str
-    state: AgentExecutionStatus
+class Success(BaseModel):
+    success: bool = True
 
+
+class EventPage(BaseModel):
+    items: list[EventBase]
+    next_page_id: str | None = None
