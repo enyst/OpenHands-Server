@@ -50,6 +50,7 @@ class SandboxService(ABC):
 
     async def __aenter__(self):
         """Start using this sandbox service"""
+        return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         """Stop using this sandbox service"""
@@ -67,5 +68,5 @@ def get_default_sandbox_service():
     global _sandbox_service
     if _sandbox_service:
         return _sandbox_service
-    _sandbox_service = get_impl(SandboxService)
+    _sandbox_service = get_impl(SandboxService, "openhands_server.sandbox.docker_sandbox_service.DockerSandboxService")()
     return _sandbox_service

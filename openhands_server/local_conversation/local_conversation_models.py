@@ -22,7 +22,8 @@ class ConversationStatus(Enum):
 class StartLocalConversationRequest(BaseModel):
     title: str | None
     agent: AgentInfo
-    git_models: list[GitInfo] = Field(default_factory=list)
+    # TODO: This will need to be copied from user settings..
+    # git_models: list[GitInfo] = Field(default_factory=list)
 
 
 class StoredLocalConversation(StartLocalConversationRequest):

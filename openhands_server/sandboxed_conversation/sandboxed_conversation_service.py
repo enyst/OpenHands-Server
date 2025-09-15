@@ -5,7 +5,7 @@ from tkinter import EventType
 from uuid import UUID
 
 from openhands_server.event.read_only_event_context import ReadOnlyEventContext
-from openhands_server.sandboxed_conversation.sandboxed_conversation_models import SandboxedConversationInfo, SandboxedConversationPage, StartSandboxedConversationRequest
+from openhands_server.sandboxed_conversation.sandboxed_conversation_models import SandboxedConversationInfo, SandboxedConversationPage
 from openhands_server.utils.import_utils import get_impl
 
 
@@ -40,15 +40,16 @@ class SandboxedConversationService(ABC):
     # Lifecycle methods
 
     async def __aenter__(self):
-        """Start using this runtime image service"""
+        """Start using this sandboxed conversation service"""
+        return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
-        """Stop using this runtime image service"""
+        """Stop using this sandboxed conversation service"""
 
     @classmethod
     @abstractmethod
     def get_instance(cls) -> "SandboxedConversationService":
-        """ Get an instance of runtime image service """
+        """ Get an instance of sandboxed conversation service """
 
 
 _sandboxed_conversation_service: SandboxedConversationService = None
