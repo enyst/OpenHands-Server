@@ -95,25 +95,12 @@ class LocalConversationEventContext(EventContext):
             if self._conversation:
                 with self._conversation.state as state:
                     # Agent has finished
-                    if state.agent_finished:
+                    if state.agent_status == AgentExecutionStatus.FINISHED:
                         return
 
                     # Agent is already running
-                    if (
-                        not state.agent_paused
-                        and not state.agent_waiting_for_confirmation
-                    ):
+                    if state.agent_status not in [AgentExecutionStatus.PAUSED, AgentExecutionStatus.WAITING_FOR_CONFIRMATION]:
                         return
-
-                # TODO: Replace this with the real message   
-                self._conversation.send_message(
-                    Message(
-                        role="user",
-                        content=[TextContent(text="Flip a coin!")]
-                    )
-                )
-
-                self._conversation.run()
 
             agent = self.stored.agent.create_agent(self.working_dir)
             conversation = Conversation(
