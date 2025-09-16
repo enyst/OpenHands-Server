@@ -17,6 +17,12 @@ def main():
         action="store_true",
         help="Enable auto-reload for development",
     )
+    parser.add_argument(
+        "--no-reload",
+        dest="reload",
+        action="store_false",
+        help="Disable auto-reload",
+    )
 
     args = parser.parse_args()
 
