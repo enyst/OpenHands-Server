@@ -21,8 +21,8 @@ dependencies = [
   "alembic>=1.13",
   "docker>=7.1,<8",
   "fastapi>=0.104",
-  "openhands-sdk @ git+https://github.com/All-Hands-AI/agent-sdk.git@b7c8132e3d5dd398ba7543c1cda814af63939ca4#subdirectory=openhands/sdk",
-  "openhands-tools @ git+https://github.com/All-Hands-AI/agent-sdk.git@b7c8132e3d5dd398ba7543c1cda814af63939ca4#subdirectory=openhands/tools",
+  "openhands-sdk @ git+https://github.com/All-Hands-AI/agent-sdk.git@0f2a602a7642b8af23ade78a60aa03c83da4ab74#subdirectory=openhands/sdk",
+  "openhands-tools @ git+https://github.com/All-Hands-AI/agent-sdk.git@0f2a602a7642b8af23ade78a60aa03c83da4ab74#subdirectory=openhands/tools",
   "pydantic>=2",
   "sqlalchemy>=2",
   "uvicorn>=0.31.1",
@@ -40,11 +40,13 @@ optional-dependencies.dev = [
   "pytest-asyncio>=0.21",
   "ruff>=0.11.8",
 ]
-scripts.openhands-server = "openhands_server.main:main"
+
+scripts.openhands-sdk-server = "openhands_server.sdk_server.__main__:main"
 
 [dependency-groups]
 dev = [
   "httpx>=0.25",
+  "openapi-python-client>=0.26.1",
   "pre-commit>=4.3",
   "pycodestyle>=2.12",
   "pyinstaller>=6.15",
@@ -71,9 +73,9 @@ format.quote-style = "double"
 lint.select = [ "E", "F", "I" ]
 lint.isort.combine-as-imports = true
 lint.isort.force-single-line = false
-lint.isort.known-first-party = [ "openhands" ]
+lint.isort.known-first-party = [ "openhands", "openhands_server" ]
 lint.isort.lines-after-imports = 2
 
 [tool.uv.sources]
-openhands-sdk = { git = "https://github.com/All-Hands-AI/agent-sdk.git", subdirectory = "openhands/sdk", rev = "b7c8132e3d5dd398ba7543c1cda814af63939ca4" }
-openhands-tools = { git = "https://github.com/All-Hands-AI/agent-sdk.git", subdirectory = "openhands/tools", rev = "b7c8132e3d5dd398ba7543c1cda814af63939ca4" }
+openhands-sdk = { git = "https://github.com/All-Hands-AI/agent-sdk.git", subdirectory = "openhands/sdk", rev = "0f2a602a7642b8af23ade78a60aa03c83da4ab74" }
+openhands-tools = { git = "https://github.com/All-Hands-AI/agent-sdk.git", subdirectory = "openhands/tools", rev = "0f2a602a7642b8af23ade78a60aa03c83da4ab74" }
