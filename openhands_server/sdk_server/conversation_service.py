@@ -48,8 +48,15 @@ class ConversationService:
         items = []
         for id, event_service in self._event_services.items():
             # If we have reached the start of the page
-            if id == page_id:
-                page_id = None
+            if page_id is not None:
+                try:
+                    # Convert page_id to UUID for comparison
+                    page_uuid = UUID(page_id)
+                    if id == page_uuid:
+                        page_id = None
+                except (ValueError, TypeError):
+                    # Invalid page_id, skip comparison and start from beginning
+                    page_id = None
 
             # Skip past entries before the first item...
             if page_id:
