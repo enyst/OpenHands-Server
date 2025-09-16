@@ -60,13 +60,6 @@ For advanced development (adding deps, updating the spec file, debugging builds)
 ### WebSocket API
 - `WS /ws` - Real-time communication with the agent
 
-## Security
-
-### Session API Key
-Inside a sandbox, conversations are run locally, and there is a Session API key for the sandbox that needs provided.
-
-**Note**: the Session API key is occasionally sent to the client.
-
 ## About
 
 REST/WebSocket interface for OpenHands AI Agent, providing programmatic access to agent capabilities.
