@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from openhands.sdk.event import Event
 from openhands.sdk.logger import get_logger
@@ -57,16 +57,16 @@ class PubSub:
         """
         for callback_id, callback in self._callbacks.items():
             try:
-                callback(event)
+                await callback(event)
             except Exception as e:
                 logger.error(f"Error in callback {callback_id}: {e}", exc_info=True)
 
-    def on_event(self, event: Event) -> None:
+    async def on_event(self, event: Event) -> None:
         """Alias for __call__ method.
         Args:
             event: The event to pass to all callbacks
         """
-        self(event)
+        await self(event)
 
     @property
     def callback_count(self) -> int:
