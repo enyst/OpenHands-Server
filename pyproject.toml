@@ -40,7 +40,8 @@ optional-dependencies.dev = [
   "pytest-asyncio>=0.21",
   "ruff>=0.11.8",
 ]
-scripts.openhands-server = "openhands_server.main:main"
+
+scripts.openhands-sdk-server = "openhands_server.sdk_server.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -72,7 +73,7 @@ format.quote-style = "double"
 lint.select = [ "E", "F", "I" ]
 lint.isort.combine-as-imports = true
 lint.isort.force-single-line = false
-lint.isort.known-first-party = [ "openhands" ]
+lint.isort.known-first-party = [ "openhands", "openhands_server" ]
 lint.isort.lines-after-imports = 2
 
 [tool.uv.sources]
